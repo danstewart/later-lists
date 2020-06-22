@@ -1,7 +1,7 @@
-node_modules/
-dist/
-.cache/
+// Front end
+frontend/node_modules/
+frontend/dist/
+frontend/.cache/
 
-// Users will always want to get the latest packages
-yarn.lock
-package-lock.json
+// API
+api/target
