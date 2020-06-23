@@ -7,7 +7,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum APIError {
 	#[error("No results found with ID `{0}`")]
-	NotFoundId(u32),
+	NotFoundId(String),
 
 	#[error("{0}")]
 	GenericError(String),
@@ -46,10 +46,6 @@ pub async fn handle_err(err: Rejection) -> Result<impl Reply, Infallible> {
 			},
 			APIError::UnknownError(e) => {
 				eprintln!("Unknown Error: {}", e);
-				code = http::StatusCode::INTERNAL_SERVER_ERROR;
-				message = String::from("Unknown Error");
-			}
-			_ => {
 				code = http::StatusCode::INTERNAL_SERVER_ERROR;
 				message = String::from("Unknown Error");
 			}

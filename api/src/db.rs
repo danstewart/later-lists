@@ -1,6 +1,6 @@
 use mongodb::{
 	bson,
-	bson::doc,
+	bson::{doc, document::Document},
 	options::{ClientOptions, FindOptions, FindOneOptions},
 	Client,
 	Collection,
@@ -10,8 +10,6 @@ use mongodb::{
 use tokio::stream::StreamExt;
 use anyhow::{anyhow, Result};
 use std::time::Duration;
-
-use crate::models::todo_item::TodoItem;
 
 pub struct DbCnx {
 	client: Client,
@@ -40,34 +38,41 @@ impl DbCnx {
 		})
 	}
 
-	pub async fn fetch(&self, id: u32) -> Result<Option<TodoItem>> {
-		let filter = doc! { "id": id };
-		let opt = FindOneOptions::builder().show_record_id(false).build();
+	pub async fn fetch(&self, id: &bson::oid::ObjectId) -> Result<Option<Document>> {
+		let filter = doc! { "_id": id };
+		let opt    = FindOneOptions::builder().build();
 		let cursor = self.collection.find_one(filter, opt).await?;
 
 		if let Some(doc) = cursor {
-			if let Ok(doc) = bson::from_bson::<TodoItem>(bson::Bson::Document(doc)) {
-				return Ok(Some(doc));
-			} else {
-				return Err(anyhow!("Could not parse record"));
+			match bson::from_bson(bson::Bson::Document(doc)) {
+				Ok(doc) => return Ok(Some(doc)),
+				Err(e) => return Err(anyhow!("DB parse error: {}", e)),
 			}
 		}
 
 		Ok(None)
 	}
 
-	pub async fn fetch_all(&self) -> Result<Vec<TodoItem>> {
+	pub async fn fetch_all(&self) -> Result<Vec<Document>> {
 		let opt = FindOptions::builder().show_record_id(false).build();
 		let mut cursor = self.collection.find(None, opt).await?;
 
 		let mut results = Vec::new();
 		while let Some(result) = cursor.next().await {
-			match bson::from_bson::<TodoItem>(bson::Bson::Document(result.unwrap())) {
+			match bson::from_bson(bson::Bson::Document(result.unwrap())) {
 				Ok(doc) => results.push(doc),
-				Err(e) => eprintln!("Parse error: {:?}", e),
+				Err(e) => eprintln!("BSON parse error: {:?}", e),
 			}
 		}
 
 		Ok(results)
+	}
+
+	// Parses a string into an oid
+	pub fn get_oid(id: &str) -> Result<bson::oid::ObjectId> {
+		match bson::oid::ObjectId::with_string(&id) {
+			Ok(oid) => Ok(oid),
+			Err(e) => Err(anyhow!("Failed to create oid: {}", e)),
+		}
 	}
 }
