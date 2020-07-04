@@ -127,19 +127,22 @@ class TodoItemBuilder {
 
 	details({ attrs }): Vnode | undefined {
 		if (this.todo.collapsed) return;
-		
-		return m('div', [
-			m('p', this.todo.body),
-			m('br'),
-			m('button.button.is-text.is-pulled-right', { onclick: (e) => { this.todo.archive(); e.stopPropagation() } }, 'Archive'),
-			m('button.button.is-text.is-pulled-right', { onclick: (e) => { attrs.edit(this); e.stopPropagation() } }, 'Edit'),
-			m('div.taglist', [
-				Array.from(this.todo.tags).map(tag => m('span.tag.is-rounded', [
-					tag,
-					m('button.delete', { onclick: () => this.todo.removeTag(tag) }),
-				])),
+
+		return m('div.flex-row.space-between', [
+			m('div.flex-col', [
+				m('span.with-newlines', this.todo.body),
+				m('div', [
+					Array.from(this.todo.tags).map(tag => m('span.tag.is-rounded', [
+						tag,
+						m('button.delete', { onclick: (e) => { this.todo.removeTag(tag); e.stopPropagation() } }),
+					])),
+				]),
 			]),
-		])
+			m('div', { style: 'align-self: flex-end' }, [
+				m('button.button.is-text', { onclick: (e) => { this.todo.archive(); e.stopPropagation() } }, 'Archive'),
+				m('button.button.is-text', { onclick: (e) => { attrs.edit(this.todo); e.stopPropagation() } }, 'Edit'),
+			])
+		]);
 	}
 
 	view({ attrs }): Vnode {

@@ -18,9 +18,13 @@ class TodoList {
 
 		this.store = new Store();
 		this.oninit();
+		this.storeTags();
 
 		// Whenever a todo changes restore in localStorage
 		this.store.subscribe('todos', () => this.save());
+
+		// Whenever a todo changes update the tag list
+		this.store.subscribe('todos', () => this.storeTags());
 
 		TodoList.instance = this;
 	}
@@ -51,6 +55,16 @@ class TodoList {
 
 	save() {
 		localStorage.setItem('todos', JSON.stringify(this.all()))
+	}
+
+	storeTags() {
+		let tags: Set<string> = new Set<string>();
+
+		this.all().filter(t => !t.archived).forEach(todo => {
+			Array.from(todo.tags).forEach(tag => tags.add(tag));
+		});
+
+		this.store['tags'] = tags;
 	}
 
 	all(filter: Function = null): Array<TodoItem> {

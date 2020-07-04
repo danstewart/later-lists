@@ -25,7 +25,7 @@ const isSelected = (tag) => tag === store['tagFilter'];
 
 export default {
 	view: () => m('aside.menu', [
-		m('p.menu-label', 'Tags'),
+		m('p.menu-label', 'Lists'),
 		m('ul.menu-list', [
 			getAllTags().map(tag => m('li',
 				m('a', {

@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { TodoItem } from './TodoItem';
+import { Store } from '../store';
 
 // TODO:
 // - Form validation
@@ -32,6 +33,7 @@ class TodoForm {
 		this.element('toggleBtn').classList.toggle('fa-plus');
 		this.element('toggleBtn').classList.toggle('fa-minus');
 		this.element('todoForm').classList.toggle('is-hidden');
+		this.reset();
 	}
 
 	// Form state
@@ -63,6 +65,9 @@ class TodoForm {
 
 	// Mithril
 	view({ attrs }) {
+		const store = new Store();
+		let tags = Array.from(store['tags']);
+
 		return m('div', [
 			// Inputs
 			m('div.box.is-hidden', { id: 'todoForm' }, [
@@ -76,11 +81,17 @@ class TodoForm {
 				]),
 
 				// Tags
-				m('label.label', 'Tags'),
+				m('label.label', 'Lists'),
 				m('div.field.has-addons', [
-					m('div.control', m('input.input', { id: 'tags', onkeyup: (e) => e.keyCode == 13 && this.addTag() })),
+					m('div.control', m('input.input', {
+						id: 'tags',
+						list: 'tag-list',
+						type: 'text',
+						onkeyup: (e) => e.keyCode == 13 && this.addTag(),
+					})),
 					m('div.control', m('button.button', { onclick: () => this.addTag() }, 'Add'))
 				]),
+				m('datalist', { id: 'tag-list' }, tags.map(t => m('option', { value: t }))),
 
 				// Display tags
 				m('div', [

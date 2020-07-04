@@ -11,13 +11,11 @@ const saveTodo = () => {
 	const title = todoForm.field('title')?.value;
 	const body  = todoForm.field('body')?.value;
 
-	console.log(todoForm.tags)
 	if (id) {
 		todos.edit(id, { title: title, body: body, tags: Array.from(todoForm.tags) });
 	} else {
 		let todo = new TodoItem({ title: title, body: body });
 		Array.from(todoForm.tags).forEach(tag => {
-			console.log("ADDING TAG " + tag)
 			 todo.tag(tag);
 		});
 		todos.push(todo);
