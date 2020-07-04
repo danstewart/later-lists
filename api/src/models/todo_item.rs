@@ -85,7 +85,7 @@ fn parse_document(doc: bson::document::Document) -> Result<TodoItem, APIError> {
 
 // Returns a database handle
 async fn db() -> Result<DbCnx, APIError> {
-	match DbCnx::new("laterlist", "todos").await {
+	match DbCnx::new("laterlists", "todos").await {
 		Ok(db) => Ok(db),
 		Err(e) => Err(APIError::UnknownError(anyhow!("Failed to connect to database: {}", e))),
 	}
