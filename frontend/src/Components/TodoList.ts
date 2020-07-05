@@ -1,6 +1,11 @@
+// Collection of `TodoItem`s
+
 import m, { Vnode } from 'mithril';
 import { TodoItem } from './TodoItem';
-import { Store } from '../store';
+import { Store } from '/store';
+
+import { TodoItemDAO } from './TodoItem/DAO';
+import { Settings } from '/settings';
 
 interface Todos {
 	[id: number]: TodoItem
@@ -29,7 +34,8 @@ class TodoList {
 		TodoList.instance = this;
 	}
 
-	filtered() {
+	// All todos in the list that are visible
+	allVisible() {
 		return this.all().filter(todo => {
 			if (todo.archived) return false;
 
@@ -43,20 +49,29 @@ class TodoList {
 		});
 	}
 
+	// Helper for editing a specific item in the list
 	edit(id, edit) {
 		TodoList.todos[id].update(edit);
 	}
 
+	// Adds a new item
 	push(todo: TodoItem): TodoList {
 		TodoList.todos[todo.id] = todo;
 		this.store.publish('todos');
 		return this;
 	}
 
-	save() {
-		localStorage.setItem('todos', JSON.stringify(this.all()))
+	// Loads a list from a DAO
+	load(dao: TodoItemDAO = Settings.DAO) {
+		return dao.fetchAll();
 	}
 
+	// Saves a list via the DAO
+	save(dao: TodoItemDAO = Settings.DAO) {
+		dao.saveAll(this.all());
+	}
+
+	// Updates the tags in the memory store
 	storeTags() {
 		let tags: Set<string> = new Set<string>();
 
@@ -67,6 +82,7 @@ class TodoList {
 		this.store['tags'] = tags;
 	}
 
+	// Gets all todos in the list
 	all(filter: Function = null): Array<TodoItem> {
 		if (filter) {
 			return Object.values(TodoList.todos).filter(filter());
@@ -79,9 +95,9 @@ class TodoList {
 		// Don't init if we already have an instance
 		if (TodoList.instance) return;
 
-		const stored = JSON.parse(localStorage.getItem('todos'));
+		const stored = this.load();
 
-		if (stored) {
+		if (stored.length) {
 			stored.forEach(element => this.push(new TodoItem(element)));
 		} else {
 			this.push(new TodoItem({ title: 'Example Todo', body: 'This is an example pending todo' }).tag('Example'));
@@ -94,11 +110,9 @@ class TodoList {
 
 	view({ attrs }): Vnode {
 		return m('div', [
-			this.filtered().map(todo => todo.view({ attrs }))
+			this.allVisible().map(todo => todo.view({ attrs }))
 		])
 	}
 }
 
-export {
-	TodoList,
-}
+export { TodoList };

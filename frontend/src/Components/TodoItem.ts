@@ -1,20 +1,16 @@
-import { Store } from '../store';
-import m, { Vnode } from 'mithril';
+// Core TodoItem object
+
+// Todo stuff
+import { Todo } from './TodoItem/Interface';
+import { TodoItemBuilder } from './TodoItem/Builder';
+
+// Other stuff
+import { Store } from '/store';
+import { Vnode } from 'mithril';
 import dayjs, { Dayjs } from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-// import { TodoItem } from '../Models/TodoItem'
 
 dayjs.extend(utc);
-
-interface Todo {
-	id?: number,
-	title: string,
-	body: string,
-	completed?: boolean,
-	archived?: boolean,
-	tags?: Array<string>,
-	created?: Dayjs,
-}
 
 const store = new Store();
 
@@ -90,6 +86,7 @@ class TodoItem implements Todo {
 		store.publish('todos');
 	}
 
+	// Update to be archived
 	archive(): void {
 		this.archived = true;
 		store.publish('todos');
@@ -101,66 +98,4 @@ class TodoItem implements Todo {
 	}
 }
 
-// Display builder for the TodoItem
-class TodoItemBuilder {
-	todo: TodoItem;
-
-	constructor(todo: TodoItem) {
-		this.todo = todo;
-	}
-
-	title() {
-		if (this.todo.completed)
-			return m('p.subtitle', m('del', this.todo.title));
-		else
-			return m('p.subtitle', this.todo.title);
-	}
-
-	checkbox() {
-		return m('input', {
-			checked: this.todo.completed,
-			onclick: (e) => { this.todo.toggleStatus(); e.stopPropagation() },
-			type: 'checkbox',
-			style: 'margin-right: 15px;'
-		});
-	}
-
-	details({ attrs }): Vnode | undefined {
-		if (this.todo.collapsed) return;
-
-		return m('div.flex-row.space-between', [
-			m('div.flex-col', [
-				m('span.with-newlines', this.todo.body),
-				m('div', [
-					Array.from(this.todo.tags).map(tag => m('span.tag.is-rounded', [
-						tag,
-						m('button.delete', { onclick: (e) => { this.todo.removeTag(tag); e.stopPropagation() } }),
-					])),
-				]),
-			]),
-			m('div', { style: 'align-self: flex-end' }, [
-				m('button.button.is-text', { onclick: (e) => { this.todo.archive(); e.stopPropagation() } }, 'Archive'),
-				m('button.button.is-text', { onclick: (e) => { attrs.edit(this.todo); e.stopPropagation() } }, 'Edit'),
-			])
-		]);
-	}
-
-	view({ attrs }): Vnode {
-		return m('div.box', { onclick: () => this.todo.collapsed = !this.todo.collapsed, class: this.todo.completed ? 'dimmed' : '' }, [
-			m('div.level', [
-				m('div.level-left', [
-					this.checkbox(),
-					this.title(),
-				]),
-				m('div.level-right', [
-					m('p.heading', this.todo.created.local().format('YYYY-MM-DD HH:mm'))
-				]),
-			]),
-			this.details({ attrs }),
-		])
-	}
-}
-
-export {
-	TodoItem,
-}
+export { TodoItem };
