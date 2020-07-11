@@ -1,9 +1,10 @@
 import m from 'mithril';
-import { TodoForm } from '../Components/TodoForm';
-import { TodoItem } from '../Components/TodoItem';
-import { TodoList } from '../Components/TodoList';
+import { TodoSidebar } from '/Components/Sidebars';
+import { TodoForm } from '/Components/TodoForm';
+import { TodoListBuilder } from '/Components/TodoList';
+import { TodoItem } from '/Models/TodoItem';
+import { TodoList } from '/Models/TodoList';
 
-let todos: TodoList = new TodoList();
 const todoForm = new TodoForm();
 
 const saveTodo = () => {
@@ -30,10 +31,17 @@ const editTodo = (todo) => {
 	todoForm.set(todo);
 }
 
+// Load our todo list then trigger a redraw
+let todos: TodoList = new TodoList();
+let builder = new TodoListBuilder(todos);
+
+// Draw sidebar
+m.mount(document.querySelector('#sidebar'), new TodoSidebar());
+
 export default {
 	view: () => m('div.container', [
 		todoForm.view({ attrs: { onclick: () => saveTodo() }}),
 		m('br'),
-		m(todos, { edit: editTodo }),
+		m(builder, { edit: editTodo }),
 	])
 };

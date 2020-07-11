@@ -1,6 +1,6 @@
 import m from 'mithril';
-import { TodoItem } from './TodoItem';
-import { Store } from '../store';
+import { TodoItem } from '/Models/TodoItem';
+import { Store } from '/store';
 
 // TODO:
 // - Form validation
@@ -58,6 +58,7 @@ class TodoForm {
 		const tagContent = this.field('tags').value;
 		this.field('tags').value = '';
 		if (tagContent.length > 0) this.tags.add(tagContent);
+		m.redraw();
 	}
 	removeTag(tag: string) {
 		this.tags.delete(tag);
@@ -66,7 +67,9 @@ class TodoForm {
 	// Mithril
 	view({ attrs }) {
 		const store = new Store();
-		let tags = Array.from(store['tags']);
+		let tags: Array<string> = Array.from(this.tags || []);
+		tags.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+
 
 		return m('div', [
 			// Inputs
@@ -95,7 +98,7 @@ class TodoForm {
 
 				// Display tags
 				m('div', [
-					Array.from(this.tags).map(tag => m('span.tag.is-rounded', [
+					tags.map(tag => m('span.tag.is-rounded', [
 						tag,
 						m('button.delete', { onclick: () => this.removeTag(tag) }),
 					])),

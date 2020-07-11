@@ -10,6 +10,11 @@
   },
   "author": "Dan Stewart",
   "license": "MIT",
+
+  "browserslist": [
+    "last 1 Chrome versions"
+  ],
+
   "dependencies": {
     "dayjs": "^1.8.28",
     "main.css": "^2.0.0",
