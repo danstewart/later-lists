@@ -642,6 +642,7 @@ name = "laster-list-api"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "futures",
  "mongodb",
  "serde",
  "serde_json",

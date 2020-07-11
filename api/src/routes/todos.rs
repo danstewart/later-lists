@@ -5,6 +5,7 @@ use crate::models::todo_item::TodoItem;
 use crate::errors::APIError;
 
 pub async fn load_routes() -> BoxedFilter<(impl Reply,)> {
+	// POST: /api/todo
 	let add = warp::post()
 		.and(warp::path("api"))
 		.and(warp::path("todo"))
@@ -12,6 +13,7 @@ pub async fn load_routes() -> BoxedFilter<(impl Reply,)> {
 		.and(json_body())
 		.and_then(add_todo);
 
+	// GET: /api/todo/:id
 	let get = warp::get()
 		.and(warp::path("api"))
 		.and(warp::path("todo"))
@@ -19,12 +21,14 @@ pub async fn load_routes() -> BoxedFilter<(impl Reply,)> {
 		.and(warp::path::end())
 		.and_then(get_todo);
 
+	// GET: /api/todo
 	let all = warp::get()
 		.and(warp::path("api"))
 		.and(warp::path("todo"))
 		.and(warp::path::end())
 		.and_then(get_all_todos);
 
+	// PUT: /api/todo/:id
 	let update = warp::put()
 		.and(warp::path("api"))
 		.and(warp::path("todo"))

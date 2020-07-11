@@ -9,10 +9,11 @@ mod models;
 mod routes;
 
 use crate::routes::todos;
+use crate::routes::ws;
 
 #[tokio::main]
 async fn main() {
-	let routes = todos::load_routes().await;
+	let routes = todos::load_routes().await.or(ws::load_routes().await);
 
 	warp::serve(routes.recover(errors::handle_err))
 		.run(([127, 0, 0, 1], 3030))
