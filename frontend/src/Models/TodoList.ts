@@ -24,11 +24,15 @@ class TodoList {
 
 		this.init().then(() => m.redraw());
 
-		// Whenever a todo changes save everything
-		this.store.subscribe('todos', () => this.save());
+		// Whenever a todo changes store the lists and save everything
+		this.store.subscribe('todos', () => {
+			let lists = new Set<string>();
 
-		// Whenever a todo changes update the tag list
-		this.store.subscribe('todos', () => this.storeTags());
+			Object.values(TodoList.todos).forEach(todo => lists.add(todo.list));
+
+			this.store['lists'] = lists;
+			this.save();
+		});
 
 		TodoList.instance = this;
 	}
@@ -37,12 +41,7 @@ class TodoList {
 	allVisible() {
 		return this.all().filter(todo => {
 			if (todo.archived) return false;
-
-			if (this.store['tagFilter']) {
-				if (!todo._tags.has(this.store['tagFilter'])) {
-					return false;
-				}
-			}
+			if (this.store['listFilter'] && todo.list !== this.store['listFilter']) return false;
 
 			return true;
 		});
@@ -71,17 +70,6 @@ class TodoList {
 		return Promise.resolve();
 	}
 
-	// Updates the tags in the memory store
-	storeTags() {
-		let tags: Set<string> = new Set<string>();
-
-		this.all().filter(t => !t.archived).forEach(todo => {
-			Array.from(todo.tags).forEach(tag => tags.add(tag));
-		});
-
-		this.store['tags'] = tags;
-	}
-
 	// Gets all todos in the list
 	all(filter: Function = null): Array<TodoItem> {
 		if (filter) {
@@ -100,13 +88,12 @@ class TodoList {
 		if (stored.length) {
 			stored.forEach(element => this.push(new TodoItem(element)));
 		} else {
-			this.push(new TodoItem({ title: 'Example Todo', body: 'This is an example pending todo' }).tag('Example'));
-			this.push(new TodoItem({ title: 'Example Todo 2', body: 'This is an example pending todo' }).tag('Example'));
-			this.push(new TodoItem({ title: 'Example Todo 3', body: 'This is an example pending todo' }).tag('Example'));
+			this.push(new TodoItem({ title: 'Example Todo', body: 'This is an example pending todo', list: 'Example' }));
+			this.push(new TodoItem({ title: 'Example Todo 2', body: 'This is an example pending todo', list: 'Example' }));
+			this.push(new TodoItem({ title: 'Example Todo 3', body: 'This is an example pending todo', list: 'Example' }));
 			this.save();
 		}
 
-		this.storeTags();
 		return Promise.resolve();
 	}
 }

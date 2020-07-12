@@ -6,11 +6,15 @@ import { Store } from '/store';
 // - Form validation
 // - Access form fields via properties
 class TodoForm {
-	tags: Set<string>;
+	lists: Array<string>;
 	isVisible: boolean = false;
 
 	constructor() {
-		this.tags = new Set<string>();
+		const store = new Store();
+		this.lists = Array.from(store['lists'] || []);
+
+		// Update out copy of the lists whenever they change
+		store.subscribe('lists', () => this.lists = Array.from(store['lists'] || []));
 	}
 
 	// DOM shortcuts
@@ -41,36 +45,18 @@ class TodoForm {
 		this.field('todoId').value = todo.id.toString();
 		this.field('title').value = todo.title;
 		this.field('body').value = todo.body;
-		this.tags = new Set<string>(todo.tags);
+		this.field('list').value = todo.list;
 	}
 	reset () {
-		['title', 'body', 'tags', 'todoId'].forEach(el => {
+		['title', 'body', 'list', 'todoId'].forEach(el => {
 			if (this.field(el)) {
 				this.field(el).value = '';
 			}
 		});
-
-		this.tags = new Set<string>();
-	}
-
-	// Tags
-	addTag() {
-		const tagContent = this.field('tags').value;
-		this.field('tags').value = '';
-		if (tagContent.length > 0) this.tags.add(tagContent);
-		m.redraw();
-	}
-	removeTag(tag: string) {
-		this.tags.delete(tag);
 	}
 
 	// Mithril
 	view({ attrs }) {
-		const store = new Store();
-		let tags: Array<string> = Array.from(this.tags || []);
-		tags.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-
-
 		return m('div', [
 			// Inputs
 			m('div.box.is-hidden', { id: 'todoForm' }, [
@@ -83,26 +69,17 @@ class TodoForm {
 					m('textarea.textarea', { id: 'body' })
 				]),
 
-				// Tags
-				m('label.label', 'Lists'),
+				// List
+				m('label.label', 'List'),
 				m('div.field.has-addons', [
 					m('div.control', m('input.input', {
-						id: 'tags',
-						list: 'tag-list',
+						id: 'list',
+						list: 'list-list', // Yeah a list of lists, get over it
 						type: 'text',
-						onkeyup: (e) => e.keyCode == 13 && this.addTag(),
 					})),
-					m('div.control', m('button.button', { onclick: () => this.addTag() }, 'Add'))
 				]),
-				m('datalist', { id: 'tag-list' }, tags.map(t => m('option', { value: t }))),
+				m('datalist', { id: 'list-list' }, this.lists.map(t => m('option', { value: t }))),
 
-				// Display tags
-				m('div', [
-					tags.map(tag => m('span.tag.is-rounded', [
-						tag,
-						m('button.delete', { onclick: () => this.removeTag(tag) }),
-					])),
-				]),
 				m('br'),
 
 				// Submit

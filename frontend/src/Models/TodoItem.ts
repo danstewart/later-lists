@@ -9,9 +9,9 @@ interface ITodo {
 	id?: number,
 	title: string,
 	body: string,
+	list: string,
 	completed?: boolean,
 	archived?: boolean,
-	tags?: Array<string>,
 	created?: Dayjs,
 }
 
@@ -21,15 +21,11 @@ class TodoItem implements ITodo {
 	id: number;
 	title: string;
 	body: string;
+	list: string;
 	completed: boolean;
 	archived: boolean;
 	created: Dayjs;
-	tags: Array<string>;
 	collapsed: boolean = true;
-
-	// This is pretty much just a mirror of this.tags
-	// We want a Set() since they need to be unique but Sets aren't JSON serializable
-	_tags: Set<string>;
 
 	static lastId: number = 0;
 
@@ -37,10 +33,9 @@ class TodoItem implements ITodo {
 		this.id        = args.id || ++TodoItem.lastId;
 		this.title     = args.title;
 		this.body      = args.body;
+		this.list      = args.list;
 		this.completed = args.completed || false;
 		this.archived  = args.archived || false;
-		this.tags      = args.tags || [];
-		this._tags     = new Set(args.tags);
 		this.created   = dayjs.utc(args.created) || dayjs.utc();
 
 		// Set the lastId accordingly
@@ -51,47 +46,11 @@ class TodoItem implements ITodo {
 
 	// Update a todo
 	update(args: ITodo) {
-		['id', 'title', 'body', 'completed', 'archived'].forEach(prop => {
+		['id', 'title', 'body', 'list', 'completed', 'archived'].forEach(prop => {
 			if (args[prop]) this[prop] = args[prop];
 		})
 
-		if (args.tags) {
-			this.tags = args.tags;
-			this._tags   = new Set(args.tags);
-		}
-
 		store.publish('todos');
-	}
-
-	// Add a tag
-	tag(tagname: string): TodoItem {
-		if (!tagname) return this;
-
-		// Add the full tag
-		this._tags.add(tagname);
-
-		// Now add all parent tags
-		let parts = tagname.split('/');
-		parts.pop(); // Remove the one we've just added
-
-		while (parts.length > 0) {
-			let tagname = parts.join('/');
-			this._tags.add(tagname);
-			parts.pop();
-		}
-
-		this.tags = Array.from(this._tags);
-		store.publish('todos');
-		return this;
-	}
-
-	// Remove a tag
-	removeTag(tagname: string): TodoItem {
-		this._tags.delete(tagname);
-		this.tags = Array.from(this._tags);
-
-		store.publish('todos');
-		return this;
 	}
 
 	// Change state

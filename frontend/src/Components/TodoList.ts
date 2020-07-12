@@ -14,7 +14,7 @@ class TodoListBuilder {
 	view({ attrs }): Vnode {
 		return m('div', [
 			this.todos.allVisible().map(todo => new TodoItemBuilder(todo).view({ attrs }))
-		])
+		]);
 	}
 }
 

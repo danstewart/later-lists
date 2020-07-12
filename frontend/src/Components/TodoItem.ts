@@ -26,16 +26,6 @@ class TodoItemBuilder {
 		});
 	}
 
-	tags() {
-		let tags = Array.from(this.todo.tags || []);
-		tags.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-
-		return tags.map(tag => m('span.tag.is-rounded', [
-			tag,
-			m('button.delete', { onclick: (e) => { this.todo.removeTag(tag); e.stopPropagation() } }),
-		]));
-	}
-
 	details({ attrs }): Vnode | undefined {
 		if (this.todo.collapsed) return;
 
@@ -43,7 +33,7 @@ class TodoItemBuilder {
 			m('div.flex-col', [
 				m('span.with-newlines', this.todo.body),
 				m('div', [
-					this.tags(),
+					m('span.tag.is-rounded', this.todo.list),
 				]),
 			]),
 			m('div', { style: 'align-self: flex-end' }, [
