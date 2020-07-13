@@ -1,0 +1,41 @@
+/* Colors */
+
+// Core
+$wheat: #fcf5e8;
+$charcoal: #2E4057;
+$xanadu: #808F87;
+$primary: $charcoal;
+$secondary: #F7996E;
+
+// Pastels
+$pastel-red: #EDAFB8;
+$pastel-orange: #F7E1D7;
+$pastel-lightgreen: #DEDBD2;
+$pastel-green: #B0C4B1;
+$pastel-grey: #4A5759;
+
+
+/* Main */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&display=swap');
+$family-sans-serif: "IBM Plex Sans", sans-serif;
+$body-background-color: $wheat;
+$widescreen-enabled: false;
+$fullhd-enabled: false;
+
+/* Links */
+$link: $pastel-grey;
+$link-active: $pastel-grey;
+
+// Update some of Bulma's component variables
+$control-border-width: 2px;
+$input-shadow: none;
+$link-focus-border: $pastel-grey;
+
+
+/* Box */
+$box-shadow: 1px 2px rgba($pastel-grey, 0.1);
+
+/* Input */
+$input-shadow: 0px;
+$input-border-color: rgba($pastel-grey, 0.2);
+$input-focus-box-shadow-size: 0px;

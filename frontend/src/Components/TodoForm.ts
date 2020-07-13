@@ -71,7 +71,7 @@ class TodoForm {
 
 				// List
 				m('label.label', 'List'),
-				m('div.field.has-addons', [
+				m('div.field', [
 					m('div.control', m('input.input', {
 						id: 'list',
 						list: 'list-list', // Yeah a list of lists, get over it

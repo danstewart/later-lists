@@ -12,9 +12,9 @@ class TodoItemBuilder {
 
 	title() {
 		if (this.todo.completed)
-			return m('p.subtitle', m('del', this.todo.title));
+			return m('p.subtitle.ellipsis', m('del', this.todo.title));
 		else
-			return m('p.subtitle', this.todo.title);
+			return m('p.subtitle.ellipsis', this.todo.title);
 	}
 
 	checkbox() {
@@ -29,24 +29,29 @@ class TodoItemBuilder {
 	details({ attrs }): Vnode | undefined {
 		if (this.todo.collapsed) return;
 
-		return m('div.flex-row.space-between', [
-			m('div.flex-col', [
-				m('span.with-newlines', this.todo.body),
-				m('div', [
-					m('span.tag.is-rounded', this.todo.list),
+		return m('div', [
+			m('span.with-newlines', this.todo.body),
+
+			m('div.flex-row.space-between', [
+				m('div.flex-col', [
+					m('div', [
+						m('span.tag.is-rounded', this.todo.list),
+					]),
 				]),
-			]),
-			m('div', { style: 'align-self: flex-end' }, [
-				m('button.button.is-text', { onclick: (e) => { this.todo.archive(); e.stopPropagation() } }, 'Archive'),
-				m('button.button.is-text', { onclick: (e) => { attrs.edit(this.todo); e.stopPropagation() } }, 'Edit'),
+				m('div', { style: 'align-self: flex-end' }, [
+					m('div.level.is-mobile', [
+						m('button.button.is-text', { onclick: (e) => { this.todo.archive(); e.stopPropagation() } }, 'Archive'),
+						m('button.button.is-text', { onclick: (e) => { attrs.edit(this.todo); e.stopPropagation() } }, 'Edit'),
+					])
+				])
 			])
-		]);
+		])
 	}
 
 	view({ attrs }): Vnode {
 		return m('div.box', { onclick: () => this.todo.collapsed = !this.todo.collapsed, class: this.todo.completed ? 'dimmed' : '' }, [
-			m('div.level', [
-				m('div.level-left', [
+			m('div.level.is-mobile', [
+				m('div.level-left', { style: 'width: 60%' }, [
 					this.checkbox(),
 					this.title(),
 				]),

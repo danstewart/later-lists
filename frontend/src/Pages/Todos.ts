@@ -38,8 +38,8 @@ m.mount(document.querySelector('#sidebar'), new TodoSidebar());
 
 export default {
 	view: () => m('div.container', [
-		todoForm.view({ attrs: { onclick: () => saveTodo() }}),
-		m('br'),
 		m(builder, { edit: editTodo }),
+		m('br'),
+		todoForm.view({ attrs: { onclick: () => saveTodo() }}),
 	])
 };

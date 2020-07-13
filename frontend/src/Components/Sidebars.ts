@@ -20,24 +20,23 @@ class TodoSidebar {
 	drawLists() {
 		let lists: Array<string> = Array.from(store['lists'] || []);
 		return lists.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())).map(list => {
-			return m('a.with-newlines', {
+			return m('div', [
+				m('a.button.is-text.has-text-left.with-newlines.sidebar-link', {
 				class: this.isSelected(list) ? 'is-active' : '',
-				style: 'padding: 10px 0px 10px 2px !important',
 				onclick: () => {
 					if (this.isSelected(list)) {
 						store.drop('listFilter');
 					} else {
 						store['listFilter'] = list;
 					}
-				}},
-				list
-			)
+				}}, list),
+			])
 		});
 	}
 
 	view(): Vnode {
 		return m('aside.menu', [
-			m('p.menu-label', 'Lists'),
+			m('p.menu-label.is-size-6', 'Lists'),
 			m('ul.menu-list', [
 				this.drawLists(),
 			])

@@ -1,0 +1,31 @@
+@charset "utf-8";
+
+// Bulma
+@import "overrides.scss";
+@import "../node_modules/bulma/bulma.sass";
+
+// My stuff
+@import "flex.scss";
+@import "helpers.scss";
+
+/* Element styling */
+main {
+	margin-top: 20px;
+	margin-left: 30px;
+	margin-right: 30px;
+}
+
+header {
+	position: relative;
+	z-index: 1;
+}
+
+/* Classes */
+.tag {
+	margin-right: 5px;
+	margin-top: 15px;
+}
+
+.sidebar-link {
+	padding: 10px 0px 10px 2px !important;
+}

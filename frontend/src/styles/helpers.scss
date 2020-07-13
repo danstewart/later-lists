@@ -1,0 +1,20 @@
+/* Misc helpers */
+.with-newlines {
+	white-space: pre-wrap;
+}
+
+.strike {
+	text-decoration: overline;
+}
+
+.dimmed {
+	filter: brightness(90%);
+}
+
+.ellipsis {
+	text-overflow: ellipsis;
+
+	/* Required for text-overflow to do anything */
+	white-space: nowrap;
+	overflow: hidden;
+}

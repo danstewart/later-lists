@@ -28,7 +28,7 @@ class TodoList {
 		this.store.subscribe('todos', () => {
 			let lists = new Set<string>();
 
-			Object.values(TodoList.todos).forEach(todo => lists.add(todo.list));
+			Object.values(TodoList.todos).filter(t => !t.archived).forEach(t => lists.add(t.list));
 
 			this.store['lists'] = lists;
 			this.save();
