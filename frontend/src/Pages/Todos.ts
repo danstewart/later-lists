@@ -6,6 +6,8 @@ import { TodoItem } from '/Models/TodoItem';
 import { TodoList } from '/Models/TodoList';
 
 const todoForm = new TodoForm();
+const todos    = new TodoList();
+const builder  = new TodoListBuilder(todos);
 
 const saveTodo = () => {
 	const id    = todoForm.field('todoId')?.value;
@@ -28,10 +30,6 @@ const editTodo = (todo) => {
 	todoForm.show();
 	todoForm.set(todo);
 }
-
-// Load our todo list then trigger a redraw
-let todos: TodoList = new TodoList();
-let builder = new TodoListBuilder(todos);
 
 // Draw sidebar
 m.mount(document.querySelector('#sidebar'), new TodoSidebar());
