@@ -20,12 +20,62 @@ header {
 	z-index: 1;
 }
 
+/* Extensions */
+.on-dark {
+	color: white !important;
+
+	&:hover {
+		background-color: darken($primary, 10%) !important;
+	 }
+
+	 &:focus {
+		background-color: darken($primary, 10%) !important;
+	 }
+}
+
 /* Classes */
 .tag {
 	margin-right: 5px;
 	margin-top: 15px;
 }
 
+// Floating action button
+.FAB {
+	width: 70px;
+	height: 70px;
+	background-color: $secondary;
+	border-radius: 50%;
+	font-family: monospace;
+	transition: all 0.1s ease-in-out;
+
+	font-size: 50px;
+	color: white;
+	text-align: center;
+
+	position: fixed;
+	right: 40px;
+	bottom: 40px;
+
+	border: 0px;
+
+	&:hover {
+		background-color: orangered;
+	}
+}
+
 .sidebar-link {
 	padding: 10px 0px 10px 2px !important;
+}
+
+/* Bug Fixes */
+// Looks like the fixed nav doesn't work on mobile, this adjusts the body content under the nav
+@media screen and (max-width: 1087px) {
+	body {
+		padding-top: 50px;
+	}
+}
+
+// This uses the $modal-card-head-background-color so override here
+.modal-card-foot {
+	background-color: $wheat !important;
 }

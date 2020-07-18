@@ -38,6 +38,7 @@ export default {
 	view: () => m('div.container', [
 		m(builder, { edit: editTodo }),
 		m('br'),
+		m('button.FAB', { onclick: () => todoForm.show() }, '+'),
 		todoForm.view({ attrs: { onclick: () => saveTodo() }}),
 	])
 };

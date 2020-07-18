@@ -62,47 +62,39 @@ class TodoForm {
 	view({ attrs }) {
 		let form = m('div', { id: 'todoForm' }, [
 			// Inputs
-			m('div.field', [
-				m('label.label', 'Title'),
-				m('input.input', { id: 'title' })
-			]),
+			m('div.columns', m('div.column.is-one-third', [
+				m('div.field', [
+					m('label.label', 'Title'),
+					m('input.input', { id: 'title' })
+				]),
+			])),
 			m('div.field', [
 				m('label.label', 'Description'),
 				m('textarea.textarea', { id: 'body' })
 			]),
 
 			// List
-			m('label.label', 'List'),
-			m('div.field', [
-				m('div.control', m('input.input', {
-					id: 'list',
-					list: 'list-list', // Yeah a list of lists, get over it
-					type: 'text',
-				})),
-			]),
-			m('datalist', { id: 'list-list' }, this.lists.map(t => m('option', { value: t }))),
-
-			m('br'),
+			m('div.columns', m('div.column.is-one-third', [
+				m('label.label', 'List'),
+				m('div.field', [
+					m('div.control', m('input.input', {
+						id: 'list',
+						list: 'list-list', // Yeah a list of lists, get over it
+						type: 'text',
+					})),
+				]),
+				m('datalist', { id: 'list-list' }, this.lists.map(t => m('option', { value: t }))),
+			])),
 
 			m('input.input.is-hidden', { id: 'todoId' })
 		]);
 
 		let submit = m('div.field', [
 			m('button.button.is-primary', { onclick: () => attrs.onclick() }, 'Submit'),
+			m('button.button.is-text', { onclick: () => this.modal.toggle() }, 'Cancel'),
 		]);
 
-		let btnIcon = this.modal.visible ? 'fa.minus' : 'fa-plus';
 		return m('div', [
-			// Toggle button
-			m('div.has-text-centered', [
-				m('a.button.is-text', {
-					onclick: () => {
-						this.toggleVisibility();
-					}
-				},[
-					m(`i.fas.${btnIcon}`, { id: 'toggleBtn' })
-				]),
-			]),
 			this.modal.view({ attrs: {
 				header: `${this.state} Todo`,
 				content: form,

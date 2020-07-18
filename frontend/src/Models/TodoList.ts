@@ -88,9 +88,16 @@ class TodoList {
 		if (stored.length) {
 			stored.forEach(element => this.push(new TodoItem(element)));
 		} else {
-			this.push(new TodoItem({ title: 'Example Todo', body: 'This is an example pending todo', list: 'Example' }));
-			this.push(new TodoItem({ title: 'Example Todo 2', body: 'This is an example pending todo', list: 'Example' }));
-			this.push(new TodoItem({ title: 'Example Todo 3', body: 'This is an example pending todo', list: 'Example' }));
+			// Create some example todos
+			const lists = [ 'Example', 'Testing', 'Demo' ];
+			for (let i=1; i<=20; i++) {
+				this.push(new TodoItem({
+					title: `Example Todo ${i}`,
+					body: 'This is an example pending todo',
+					list: lists[Math.floor(Math.random() * lists.length)],
+				}));
+			}
+
 			this.save();
 		}
 
