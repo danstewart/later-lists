@@ -1,12 +1,12 @@
-use warp::{http, Filter, Reply, reject, filters::BoxedFilter};
-use anyhow::Result;
+use warp::{Filter, Reply, reject, filters::BoxedFilter};
+use anyhow::{Result};
+use super::helpers::{http_ok};
 
-use crate::models::todo_item::TodoItem;
-use crate::errors::APIError;
+use crate::models::todos::{TodoItem};
 
 pub async fn load_routes() -> BoxedFilter<(impl Reply,)> {
-	// POST: /api/todo
-	let add = warp::post()
+	// PUT: /api/todo
+	let add = warp::put()
 		.and(warp::path("api"))
 		.and(warp::path("todo"))
 		.and(warp::path::end())
@@ -17,7 +17,7 @@ pub async fn load_routes() -> BoxedFilter<(impl Reply,)> {
 	let get = warp::get()
 		.and(warp::path("api"))
 		.and(warp::path("todo"))
-		.and(warp::path::param::<String>())
+		.and(warp::path::param::<i32>())
 		.and(warp::path::end())
 		.and_then(get_todo);
 
@@ -28,11 +28,11 @@ pub async fn load_routes() -> BoxedFilter<(impl Reply,)> {
 		.and(warp::path::end())
 		.and_then(get_all_todos);
 
-	// PUT: /api/todo/:id
-	let update = warp::put()
+	// POST: /api/todo/:id
+	let update = warp::post()
 		.and(warp::path("api"))
 		.and(warp::path("todo"))
-		.and(warp::path::param::<String>())
+		.and(warp::path::param::<i32>())
 		.and(warp::path::end())
 		.and(json_body())
 		.and_then(update_todo);
@@ -42,44 +42,44 @@ pub async fn load_routes() -> BoxedFilter<(impl Reply,)> {
 }
 
 // GET /api/todo/3
-async fn get_todo(id: String) -> Result<impl warp::Reply, warp::Rejection> {
+async fn get_todo(id: i32) -> Result<impl warp::Reply, warp::Rejection> {
 	match TodoItem::find(id).await {
-		Ok(result) => Ok(warp::reply::json(&result)),
-		Err(e) => Err(reject::custom(e)),
+		Ok (result) => Ok(warp::reply::json(&result)),
+		Err(e)      => Err(reject::custom(e)),
 	}
 }
 
 // GET /api/todo
 async fn get_all_todos() -> Result<impl warp::Reply, warp::Rejection> {
 	match TodoItem::all().await {
-		Ok(results) => Ok(warp::reply::json(&results)),
-		Err(e) => Err(reject::custom(APIError::UnknownError(e))),
+		Ok (results) => Ok(warp::reply::json(&results)),
+		Err(e)       => Err(reject::custom(e)),
 	}
 }
 
-// POST /api/todo
-async fn add_todo(todo: TodoItem) -> Result<impl warp::Reply, warp::Rejection> {
-	// TODO
-	todo.save().await;
+// PUT /api/todo
+async fn add_todo(mut todo: TodoItem) -> Result<impl warp::Reply, warp::Rejection> {
+	// Ensure an ID wasn't specified
+	todo.id = None;
 
-	Ok(warp::reply::with_status(
-		format!("Added item '{}'", todo.title),
-		http::StatusCode::OK,
-	))
+	match todo.create().await {
+		Ok(id) => Ok(http_ok(format!("Created todo `{:?}`", id))),
+		Err(e) => Err(reject::custom(e)),
+	}
 }
 
-// PUT /api/todo/3
-async fn update_todo(id: String, todo: TodoItem) -> Result<impl warp::Reply, warp::Rejection> {
-	// TODO
-	todo.save().await;
+// POST /api/todo/3
+async fn update_todo(id: i32, mut todo: TodoItem) -> Result<impl warp::Reply, warp::Rejection> {
+	// Ensure the ID is specified
+	todo.id = Some(id);
 
-	Ok(warp::reply::with_status(
-		format!("Updated todo `{}`", id),
-		http::StatusCode::OK,
-	))
+	match todo.save().await {
+		Ok (_) => Ok(http_ok(format!("Updated todo '{:?}'", todo.id.unwrap()))),
+		Err(e) => Err(reject::custom(e)),
+	}
+
 }
 
-/* JSON helpers */
 // Parse json req body
 fn json_body() -> impl Filter<Extract = (TodoItem,), Error = warp::Rejection> + Clone {
 	warp::body::content_length_limit(1024 * 16).and(warp::body::json())
