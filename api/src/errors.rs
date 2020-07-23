@@ -57,7 +57,8 @@ pub async fn handle_err(err: Rejection) -> Result<impl Reply, Infallible> {
 		message = deserialize_err.to_string();
 	
 	// Bad method
-	} else if let Some(_) = err.find::<warp::reject::MethodNotAllowed>() {
+	} else if let Some(err) = err.find::<warp::reject::MethodNotAllowed>() {
+		eprintln!("Unhandled Rejection: {:?}", err);
 		code = http::StatusCode::BAD_REQUEST;
 		message = String::from("Invalid request");
 

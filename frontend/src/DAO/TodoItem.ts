@@ -1,4 +1,5 @@
 import { ITodo, TodoItem } from '/Models/TodoItem';
+import m from 'mithril';
 
 // Base Data Access Object
 abstract class DAO {
@@ -12,45 +13,48 @@ abstract class DAO {
 }
 
 class API extends DAO {
-	private static endpoint: string = 'https://127.0.0.1:3030';
-
-	private async reqJson(path: string) {
-		let res    = await fetch(`${API.endpoint}/${path}`);
-		let json   = await res.json();
-		let parsed = JSON.parse(json);
-		return parsed;
-	}
+	private static endpoint: string = 'http://127.0.0.1:3030';
 
 	async fetch(id: number) {
-		let todo = await this.reqJson(`/api/todo/${id}`);
-		return new Promise<ITodo>(todo);
+		let res = await fetch(`${API.endpoint}/api/todos/${id}`);
+		let todo = JSON.parse(await res.json());
+		return new Promise<ITodo>((resolve) => resolve(todo));
 	}
 
 	async fetchAll() {
-		let todos = await this.reqJson(`/api/todo`);
-		return new Promise<Array<ITodo>>(todos);
+		let res = await fetch(`${API.endpoint}/api/todo`);
+		let todos = await res.json();
+		return new Promise<Array<ITodo>>((resolve) => resolve(todos));
 	}
 
 	async save(item: ITodo) {
+		// Override JSON serialization for DayJS
+		item.created.toJSON = function() {
+			return item.created.format("YYYY-MM-DDTHH:mm:ss");
+		}
+
 		if (item.id) {
+			// Update
 			await fetch(`${API.endpoint}/api/todo/${item.id}`, {
-				method: 'PUT',
+				method: 'POST',
 				headers: {
 					'Accept': 'application/json',
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json; charset=UTF-8'
 				},
 				body: JSON.stringify(item),
 			});
 		} else {
+			// Insert
 			await fetch(`${API.endpoint}/api/todo`, {
-				method: 'POST',
+				method: 'PUT',
 				headers: {
 					'Accept': 'application/json',
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json; charset=UTF-8'
 				},
 				body: JSON.stringify(item),
 			});
 		}
+
 		return Promise.resolve();
 	}
 
