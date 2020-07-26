@@ -5,7 +5,7 @@ use async_trait::async_trait;
 
 use crate::errors::APIError;
 use crate::schema::lists;
-use super::{connect, Model};
+use super::helpers::{connect, Model};
 
 #[derive(Queryable, Insertable, Identifiable, AsChangeset, Debug, Deserialize, Serialize, Clone)]
 #[table_name="lists"]

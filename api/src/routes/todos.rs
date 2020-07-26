@@ -4,11 +4,14 @@ use anyhow::{Result};
 use super::helpers::{http_ok};
 
 use crate::models::{
-	Model,
+	helpers::Model,
 	todos::TodoItem,
 	lists::TodoList,
 };
 
+/*
+* Data structures
+*/
 #[derive(Debug, Deserialize, Serialize, Clone)]
 struct TodoRequest {
 	id: Option<uuid::Uuid>,
@@ -17,8 +20,26 @@ struct TodoRequest {
 	completed: bool,
 	archived: bool,
 	todo_list_id: Option<uuid::Uuid>,
-	created_at: chrono::NaiveDateTime,
-	updated_at: chrono::NaiveDateTime,
+}
+
+impl TodoRequest {
+	fn into_todo_item(self) -> TodoItem {
+		let uuid = match self.id {
+			Some(id) => id,
+			None     => uuid::Uuid::new_v4()
+		};
+
+		TodoItem {
+			id: uuid,
+			title: self.title,
+			body: self.body,
+			completed: self.completed,
+			archived: self.archived,
+			todo_list_id: self.todo_list_id,
+			created_at: chrono::Utc::now().naive_utc(),
+			updated_at: chrono::Utc::now().naive_utc(),
+		}
+	}
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -34,6 +55,39 @@ struct TodoResponse {
 	updated_at: chrono::NaiveDateTime,
 }
 
+impl TodoResponse {
+	fn from_todo_and_list(todo: TodoItem, list: TodoList) -> Self {
+		TodoResponse {
+			id: todo.id,
+			title: todo.title,
+			body: todo.body,
+			completed: todo.completed,
+			archived: todo.archived,
+			todo_list_id: Some(list.id),
+			todo_list_name: Some(list.name),
+			created_at: todo.created_at,
+			updated_at: todo.updated_at,
+		}
+	}
+
+	fn from_todo(todo: TodoItem) -> Self {
+		TodoResponse {
+			id: todo.id,
+			title: todo.title,
+			body: todo.body,
+			completed: todo.completed,
+			archived: todo.archived,
+			todo_list_id: None,
+			todo_list_name: None,
+			created_at: todo.created_at,
+			updated_at: todo.updated_at,
+		}
+	}
+}
+
+/*
+* Routes
+*/
 pub async fn load_routes() -> BoxedFilter<(impl Reply,)> {
 	// PUT: /api/todo
 	let add = warp::put()
@@ -89,33 +143,37 @@ async fn get_todo(id: uuid::Uuid) -> Result<impl warp::Reply, warp::Rejection> {
 		Err(e)    => return Err(reject::custom(e))
 	};
 
-	let response = TodoResponse {
-		id: todo.id,
-		title: todo.title,
-		body: todo.body,
-		completed: todo.completed,
-		archived: todo.archived,
-		todo_list_id: Some(list.id),
-		todo_list_name: Some(list.name),
-		created_at: todo.created_at,
-		updated_at: todo.updated_at,
-	};
-
+	let response = TodoResponse::from_todo_and_list(todo, list);
 	Ok(warp::reply::json(&response))
 }
 
 // GET /api/todo
 async fn get_all_todos() -> Result<impl warp::Reply, warp::Rejection> {
-	match TodoItem::all().await {
-		Ok (results) => Ok(warp::reply::json(&results)),
-		Err(e)       => Err(reject::custom(e)),
+	let todos = match TodoItem::all().await {
+		Ok (todos) => todos,
+		Err(e)     => return Err(reject::custom(e)),
+	};
+
+	let mut results = Vec::<TodoResponse>::new();
+	for todo in todos {
+		let result: TodoResponse;
+
+		if let Some(id) = todo.todo_list_id {
+			let list = TodoList::find(id).await.unwrap(); // TODO: Error handling
+			result = TodoResponse::from_todo_and_list(todo, list);
+		} else {
+			result = TodoResponse::from_todo(todo);
+		}
+
+		results.push(result);
 	}
+
+	Ok(warp::reply::json(&results))
 }
 
 // PUT /api/todo
-async fn add_todo(todo: TodoItem) -> Result<impl warp::Reply, warp::Rejection> {
-	// Ensure an ID wasn't specified
-	// todo.id = uuid::Uuid::default();
+async fn add_todo(todo: TodoRequest) -> Result<impl warp::Reply, warp::Rejection> {
+	let todo = todo.into_todo_item();
 
 	match todo.create().await {
 		Ok(id) => Ok(http_ok(format!("Created todo `{:?}`", id))),
@@ -124,9 +182,9 @@ async fn add_todo(todo: TodoItem) -> Result<impl warp::Reply, warp::Rejection> {
 }
 
 // POST /api/todo/3
-async fn update_todo(id: uuid::Uuid, mut todo: TodoItem) -> Result<impl warp::Reply, warp::Rejection> {
-	// Ensure the ID is specified
-	todo.id = id;
+async fn update_todo(id: uuid::Uuid, mut todo: TodoRequest) -> Result<impl warp::Reply, warp::Rejection> {
+	todo.id  = Some(id);
+	let todo = todo.into_todo_item();
 
 	match todo.save().await {
 		Ok (_) => Ok(http_ok(format!("Updated todo '{:?}'", todo.id))),
@@ -135,7 +193,10 @@ async fn update_todo(id: uuid::Uuid, mut todo: TodoItem) -> Result<impl warp::Re
 
 }
 
+/*
+* Helpers
+*/
 // Parse json req body
-fn json_body() -> impl Filter<Extract = (TodoItem,), Error = warp::Rejection> + Clone {
+fn json_body() -> impl Filter<Extract = (TodoRequest,), Error = warp::Rejection> + Clone {
 	warp::body::content_length_limit(1024 * 16).and(warp::body::json())
 }

@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use crate::errors::APIError;
 use crate::schema::todos;
 use super::lists::{TodoList};
-use super::{connect, Model};
+use super::helpers::{connect, Model};
 
 #[derive(Queryable, Insertable, Identifiable, AsChangeset, Associations, Debug, Deserialize, Serialize, Clone)]
 #[belongs_to(TodoList)]
@@ -50,9 +50,18 @@ impl Model for TodoItem {
 	async fn save(&self) -> Result<bool, APIError> {
 		let connection = connect();
 
-		let result: QueryResult<TodoItem> = diesel::update(todos::table.find(self.id))
-			.set(self.clone())
-			.get_result(&connection);
+		// NOTE: Manually set each field since we don't want to change `created_at`
+		// and there isn't a (good) way to skip a AsChangeset field
+		// See https://github.com/diesel-rs/diesel/issues/860
+		let result = diesel::update(todos::table.find(self.id))
+			.set((
+				todos::title.eq(&self.title),
+				todos::body.eq(&self.body),
+				todos::completed.eq(&self.completed),
+				todos::archived.eq(&self.archived),
+				todos::updated_at.eq(chrono::Utc::now().naive_utc())
+			))
+			.execute(&connection);
 
 		match result {
 			Ok (_) => Ok(true),
