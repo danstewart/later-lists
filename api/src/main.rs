@@ -15,7 +15,6 @@ extern crate diesel;
 extern crate dotenv;
 extern crate chrono;
 
-
 #[tokio::main]
 async fn main() {
 	let routes = todos::load_routes().await.or(ws::load_routes().await);

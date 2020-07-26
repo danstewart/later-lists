@@ -1,10 +1,26 @@
 table! {
-	todos (id) {
-		id -> Nullable<Int4>, // Hack this to be nullable so we can use one struct
-		title -> Varchar,
-		body -> Text,
-		completed -> Bool,
-		archived -> Bool,
-		created -> Timestamp,
-	}
+    lists (id) {
+        id -> Uuid,
+        name -> Varchar,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
 }
+
+table! {
+    todos (id) {
+        id -> Uuid,
+        title -> Varchar,
+        body -> Text,
+        completed -> Bool,
+        archived -> Bool,
+        todo_list_id -> Nullable<Uuid>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+allow_tables_to_appear_in_same_query!(
+    lists,
+    todos,
+);

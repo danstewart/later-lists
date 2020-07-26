@@ -7,7 +7,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum APIError {
 	#[error("No results found with ID `{0}`")]
-	NotFoundId(i32),
+	NotFoundId(uuid::Uuid),
 
 	#[error("{0}")]
 	GenericError(String),

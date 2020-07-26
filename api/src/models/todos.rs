@@ -1,27 +1,30 @@
 use serde::{Deserialize, Serialize};
 use anyhow::{anyhow, Result};
 use diesel::prelude::*;
-use diesel::pg::PgConnection;
-use dotenv::dotenv;
-use std::env;
+use async_trait::async_trait;
 
 use crate::errors::APIError;
 use crate::schema::todos;
+use super::lists::{TodoList};
+use super::{connect, Model};
 
-#[derive(Queryable, Insertable, Identifiable, AsChangeset, Debug, Deserialize, Serialize, Clone)]
+#[derive(Queryable, Insertable, Identifiable, AsChangeset, Associations, Debug, Deserialize, Serialize, Clone)]
+#[belongs_to(TodoList)]
 #[table_name="todos"]
 pub struct TodoItem {
-	#[serde(skip_serializing_if="Option::is_none")]
-	pub id: Option<i32>,
+	pub id: uuid::Uuid,
 	pub title: String,
 	pub body: String,
 	pub completed: bool,
 	pub archived: bool,
-	pub created: chrono::NaiveDateTime,
+	pub todo_list_id: Option<uuid::Uuid>,
+	pub created_at: chrono::NaiveDateTime,
+	pub updated_at: chrono::NaiveDateTime,
 }
 
-impl TodoItem {
-	pub async fn all() -> Result<Vec<TodoItem>, APIError> {
+#[async_trait]
+impl Model for TodoItem {
+	async fn all() -> Result<Vec<TodoItem>, APIError> {
 		let connection = connect();
 		let results = todos::table.load::<TodoItem>(&connection);
 
@@ -31,7 +34,7 @@ impl TodoItem {
 		}
 	}
 
-	pub async fn find(id: i32) -> Result<TodoItem, APIError> {
+	async fn find(id: uuid::Uuid) -> Result<TodoItem, APIError> {
 		let connection = connect();
 		let result = todos::table.find(id).get_result::<TodoItem>(&connection);
 
@@ -44,7 +47,7 @@ impl TodoItem {
 		}
 	}
 
-	pub async fn save(&self) -> Result<bool, APIError> {
+	async fn save(&self) -> Result<bool, APIError> {
 		let connection = connect();
 
 		let result: QueryResult<TodoItem> = diesel::update(todos::table.find(self.id))
@@ -57,7 +60,7 @@ impl TodoItem {
 		}
 	}
 
-	pub async fn create(&self) -> Result<i32, APIError> {
+	async fn create(&self) -> Result<bool, APIError> {
 		let connection = connect();
 
 		let result: QueryResult<TodoItem> = diesel::insert_into(todos::table)
@@ -65,15 +68,8 @@ impl TodoItem {
 			.get_result(&connection);
 
 		match result {
-			Ok (result) => Ok(result.id.unwrap()),
+			Ok (_) => Ok(true),
 			Err(e)      => Err(APIError::UnknownError(e.into()))
 		}
 	}
-}
-
-fn connect() -> PgConnection {
-	dotenv().ok();
-
-	let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env");
-	PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
 }
