@@ -69,7 +69,7 @@ impl Model for TodoItem {
 		}
 	}
 
-	async fn create(&self) -> Result<bool, APIError> {
+	async fn create(&self) -> Result<uuid::Uuid, APIError> {
 		let connection = connect();
 
 		let result: QueryResult<TodoItem> = diesel::insert_into(todos::table)
@@ -77,8 +77,8 @@ impl Model for TodoItem {
 			.get_result(&connection);
 
 		match result {
-			Ok (_) => Ok(true),
-			Err(e)      => Err(APIError::UnknownError(e.into()))
+			Ok (todo) => Ok(todo.id),
+			Err(e)    => Err(APIError::UnknownError(e.into()))
 		}
 	}
 }

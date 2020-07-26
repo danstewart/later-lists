@@ -176,7 +176,7 @@ async fn add_todo(todo: TodoRequest) -> Result<impl warp::Reply, warp::Rejection
 	let todo = todo.into_todo_item();
 
 	match todo.create().await {
-		Ok(id) => Ok(http_ok(format!("Created todo `{:?}`", id))),
+		Ok(id) => Ok(http_ok(format!("Created todo `{}`", id))),
 		Err(e) => Err(reject::custom(e)),
 	}
 }
@@ -187,7 +187,7 @@ async fn update_todo(id: uuid::Uuid, mut todo: TodoRequest) -> Result<impl warp:
 	let todo = todo.into_todo_item();
 
 	match todo.save().await {
-		Ok (_) => Ok(http_ok(format!("Updated todo '{:?}'", todo.id))),
+		Ok (_) => Ok(http_ok(format!("Updated todo '{}'", todo.id))),
 		Err(e) => Err(reject::custom(e)),
 	}
 

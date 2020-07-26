@@ -46,7 +46,7 @@ impl Model for TodoList {
 		todo!()
 	}
 
-	async fn create(&self) -> Result<bool, APIError> {
+	async fn create(&self) -> Result<uuid::Uuid, APIError> {
 		todo!()
 	}
 }
