@@ -4,58 +4,65 @@ import m from 'mithril';
 import { ITodo, TodoItem } from '/Models/TodoItem';
 import { TodoItemDAO } from '../DAO/TodoItem';
 import { Store } from '/store';
+import { v4 as uuidv4 } from 'uuid';
 import { Settings } from '/settings';
 
-interface ITodos {
-	[id: number]: TodoItem
+interface ITodoList {
+	id: string,
+	name: string,
+	todos: Array<TodoItem>,
 }
 
+const store = new Store();
+
 class TodoList {
-	private static instance: TodoList;
-	private static todos: ITodos = {};
-	private store: Store;
+	id: string;
+	name: string;
+	todos: {
+		[id: number]: TodoItem
+	};
 
-	constructor() {
-		if (TodoList.instance) {
-			return TodoList.instance;
-		}
-
-		this.store = new Store();
+	constructor(name: string, id: string = uuidv4()) {
+		this.id    = id;
+		this.name  = name;
+		this.todos = {};
 
 		this.init().then(() => m.redraw());
 
+		if (!store['lists']) store['lists'] = new Set<TodoList>();
+		store['lists'].add(this);
+
 		// Whenever a todo changes store the lists and save everything
+		/*
 		this.store.subscribe('todos', () => {
 			let lists = new Set<string>();
 
-			Object.values(TodoList.todos).filter(t => !t.archived).forEach(t => lists.add(t.list));
+			Object.values(this.todos).filter(t => !t.archived).forEach(t => lists.add(t.list));
 
 			this.store['lists'] = lists;
-			this.save();
 		});
+		*/
+	}
 
-		TodoList.instance = this;
+	selected() {
+		return store['listFilter'] === this.id;
 	}
 
 	// All todos in the list that are visible
-	allVisible() {
-		return this.all().filter(todo => {
-			if (todo.archived) return false;
-			if (this.store['listFilter'] && todo.list !== this.store['listFilter']) return false;
-
-			return true;
-		});
+	visible() {
+		if (!store['listFilter']) return true;
+		return this.selected();
 	}
 
 	// Helper for editing a specific item in the list
 	edit(id, edit) {
-		TodoList.todos[id].update(edit);
+		this.todos[id].update(edit);
 	}
 
 	// Adds a new item
 	push(todo: TodoItem): TodoList {
-		TodoList.todos[todo.id] = todo;
-		this.store.publish('todos');
+		this.todos[todo.id] = todo;
+		// this.store.publish('todos');
 		return this;
 	}
 
@@ -73,37 +80,34 @@ class TodoList {
 	// Gets all todos in the list
 	all(filter: Function = null): Array<TodoItem> {
 		if (filter) {
-			return Object.values(TodoList.todos).filter(filter());
+			return Object.values(this.todos).filter(filter());
 		}
 
-		return Object.values(TodoList.todos);
+		return Object.values(this.todos);
 	}
 
 	async init() {
-		// Don't init if we already have an instance
-		if (TodoList.instance) return;
-
 		let stored = await this.load();
 
 		if (stored.length) {
 			stored.forEach(element => this.push(new TodoItem(element)));
-		} else {
-			// Create some example todos
-			const lists = [ 'Example', 'Testing', 'Demo' ];
-			for (let i=1; i<=20; i++) {
-				this.push(new TodoItem({
-					title: `Example Todo ${i}`,
-					body: 'This is an example pending todo',
-					list: lists[Math.floor(Math.random() * lists.length)],
-				}));
-			}
+		// } else {
+		// 	// Create some example todos
+		// 	const lists = [ 'Example', 'Testing', 'Demo' ];
+		// 	for (let i=1; i<=20; i++) {
+		// 		this.push(new TodoItem({
+		// 			title: `Example Todo ${i}`,
+		// 			body: 'This is an example pending todo',
+		// 			list: lists[Math.floor(Math.random() * lists.length)],
+		// 		}));
+		// 	}
 
-			this.save();
+		// 	this.save();
 		}
 
 		return Promise.resolve();
 	}
 }
 
-export { TodoList, ITodos };
+export { TodoList, ITodoList };
 

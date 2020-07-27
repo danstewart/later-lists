@@ -4,11 +4,19 @@ import { TodoForm } from '/Components/TodoForm';
 import { TodoListBuilder } from '/Components/TodoList';
 import { TodoItem } from '/Models/TodoItem';
 import { TodoList } from '/Models/TodoList';
+import { TodoListAPI } from '/DAO/TodoList';
+
+// Load all lists
+let lists = [];
+new TodoListAPI().fetchAll().then(lists => {
+	lists.map(list => new TodoList(list.name, list.id));
+
+	// Redraw
+	m.mount(document.querySelector('#sidebar'), new TodoSidebar());
+	m.redraw();
+});
 
 const todoForm = new TodoForm();
-const todos    = new TodoList();
-const builder  = new TodoListBuilder(todos);
-
 const saveTodo = () => {
 	const id    = todoForm.field('todoId')?.value;
 	const title = todoForm.field('title')?.value;
@@ -16,10 +24,10 @@ const saveTodo = () => {
 	const list  = todoForm.field('list')?.value;
 
 	if (id) {
-		todos.edit(id, { title: title, body: body, list: list });
+		// todos.edit(id, { title: title, body: body, list: list });
 	} else {
 		let todo = new TodoItem({ title: title, body: body, list: list });
-		todos.push(todo);
+		// todos.push(todo);
 	}
 
 	todoForm.reset();
@@ -31,12 +39,11 @@ const editTodo = (todo) => {
 	todoForm.set(todo);
 }
 
-// Draw sidebar
-m.mount(document.querySelector('#sidebar'), new TodoSidebar());
-
 export default {
 	view: () => m('div.container', [
-		m(builder, { edit: editTodo }),
+		lists.map(list => {
+			new TodoListBuilder(list).view({ attrs: { edit: editTodo }});
+		}),
 		m('br'),
 		m('button.FAB', { onclick: () => todoForm.show() }, '+'),
 		todoForm.view({ attrs: { onclick: () => saveTodo() }}),

@@ -1,5 +1,5 @@
 import { ITodo, TodoItem } from '/Models/TodoItem';
-import m from 'mithril';
+import { v4 as uuidv4 } from 'uuid';
 
 // Base Data Access Object
 abstract class DAO {
@@ -13,16 +13,16 @@ abstract class DAO {
 }
 
 class API extends DAO {
-	private static endpoint: string = 'http://127.0.0.1:3030';
+	private static endpoint: string = 'http://127.0.0.1:3030/api/todos';
 
 	async fetch(id: number) {
-		let res = await fetch(`${API.endpoint}/api/todos/${id}`);
+		let res = await fetch(`${API.endpoint}/${id}`);
 		let todo = JSON.parse(await res.json());
 		return new Promise<ITodo>((resolve) => resolve(todo));
 	}
 
 	async fetchAll() {
-		let res = await fetch(`${API.endpoint}/api/todo`);
+		let res = await fetch(`${API.endpoint}`);
 		let todos = await res.json();
 		return new Promise<Array<ITodo>>((resolve) => resolve(todos));
 	}
@@ -35,7 +35,7 @@ class API extends DAO {
 
 		if (item.id) {
 			// Update
-			await fetch(`${API.endpoint}/api/todo/${item.id}`, {
+			await fetch(`${API.endpoint}/${item.id}`, {
 				method: 'POST',
 				headers: {
 					'Accept': 'application/json',
@@ -45,7 +45,8 @@ class API extends DAO {
 			});
 		} else {
 			// Insert
-			await fetch(`${API.endpoint}/api/todo`, {
+			item.id = uuidv4();
+			await fetch(`${API.endpoint}`, {
 				method: 'PUT',
 				headers: {
 					'Accept': 'application/json',

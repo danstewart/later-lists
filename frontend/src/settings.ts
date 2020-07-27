@@ -4,8 +4,8 @@
 import { TodoLocalStorage, TodoAPI } from './DAO/TodoItem';
 
 const DefaultSettings = {
-	// DAO: new TodoLocalStorage(),
-	DAO: new TodoAPI(),
+	DAO: new TodoLocalStorage(),
+	// DAO: new TodoAPI(),
 	DateFormat: 'YYYY-MM-DD HH:mm',
 }
 

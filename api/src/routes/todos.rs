@@ -89,33 +89,33 @@ impl TodoResponse {
 * Routes
 */
 pub async fn load_routes() -> BoxedFilter<(impl Reply,)> {
-	// PUT: /api/todo
+	// PUT: /api/todos
 	let add = warp::put()
 		.and(warp::path("api"))
-		.and(warp::path("todo"))
+		.and(warp::path("todos"))
 		.and(warp::path::end())
 		.and(json_body())
 		.and_then(add_todo);
 
-	// GET: /api/todo/:id
+	// GET: /api/todos/:id
 	let get = warp::get()
 		.and(warp::path("api"))
-		.and(warp::path("todo"))
+		.and(warp::path("todos"))
 		.and(warp::path::param::<uuid::Uuid>())
 		.and(warp::path::end())
 		.and_then(get_todo);
 
-	// GET: /api/todo
+	// GET: /api/todos
 	let all = warp::get()
 		.and(warp::path("api"))
-		.and(warp::path("todo"))
+		.and(warp::path("todos"))
 		.and(warp::path::end())
 		.and_then(get_all_todos);
 
-	// POST: /api/todo/:id
+	// POST: /api/todos/:id
 	let update = warp::post()
 		.and(warp::path("api"))
-		.and(warp::path("todo"))
+		.and(warp::path("todos"))
 		.and(warp::path::param::<uuid::Uuid>())
 		.and(warp::path::end())
 		.and(json_body())

@@ -5,15 +5,15 @@ import { TodoItemBuilder } from '/Components/TodoItem';
 import { TodoList } from '/Models/TodoList';
 
 class TodoListBuilder {
-	private todos: TodoList;
+	private list: TodoList;
 
 	constructor(todoList: TodoList) {
-		this.todos = todoList;
+		this.list = todoList;
 	}
 
 	view({ attrs }): Vnode {
 		return m('div', [
-			this.todos.allVisible().map(todo => new TodoItemBuilder(todo).view({ attrs }))
+			this.list.all().map(todo => new TodoItemBuilder(todo).view({ attrs }))
 		]);
 	}
 }

@@ -1,7 +1,9 @@
 import { Store } from '/store';
-import { Vnode } from 'mithril';
 import dayjs, { Dayjs } from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import { v4 as uuidv4 } from 'uuid';
+import { Settings } from '/settings';
+import { TodoItemDAO } from '../DAO/TodoItem';
 
 dayjs.extend(utc);
 
@@ -30,7 +32,7 @@ class TodoItem implements ITodo {
 	static lastId: number = 0;
 
 	public constructor(args: ITodo) {
-		this.id        = args.id || ++TodoItem.lastId;
+		this.id        = args.id || uuidv4();
 		this.title     = args.title;
 		this.body      = args.body;
 		this.list      = args.list;
@@ -42,6 +44,9 @@ class TodoItem implements ITodo {
 		if (args.id && args.id > TodoItem.lastId) {
 			TodoItem.lastId = args.id;
 		}
+
+		// Whenever a todo changes re-save it
+		store.subscribe(`todo-${this.id}`, () => this.save());
 	}
 
 	// Update a todo
@@ -50,7 +55,14 @@ class TodoItem implements ITodo {
 			if (args[prop]) this[prop] = args[prop];
 		})
 
+		store.publish(`todo-${args.id}`);
 		store.publish('todos');
+	}
+
+	// Saves a list via the DAO
+	async save(dao: TodoItemDAO = Settings.DAO): Promise<any> {
+		dao.save(this);
+		return Promise.resolve();
 	}
 
 	// Change state
