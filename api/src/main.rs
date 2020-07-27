@@ -8,7 +8,7 @@ mod models;
 mod routes;
 mod schema;
 
-use crate::routes::{todos, ws};
+use crate::routes::{todos, lists, ws};
 
 #[macro_use]
 extern crate diesel;
@@ -17,7 +17,7 @@ extern crate chrono;
 
 #[tokio::main]
 async fn main() {
-	let routes = todos::load_routes().await.or(ws::load_routes().await);
+	let routes = todos::load_routes().await.or(ws::load_routes().await).or(lists::load_routes().await);
 	let cors = warp::cors()
 		.allow_any_origin()
 		.allow_headers(vec![

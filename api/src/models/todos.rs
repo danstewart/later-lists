@@ -25,8 +25,7 @@ pub struct TodoItem {
 #[async_trait]
 impl Model for TodoItem {
 	async fn all() -> Result<Vec<TodoItem>, APIError> {
-		let connection = connect();
-		let results = todos::table.load::<TodoItem>(&connection);
+		let results = todos::table.load::<TodoItem>(&connect());
 
 		match results {
 			Ok (results) => Ok(results),
@@ -35,8 +34,7 @@ impl Model for TodoItem {
 	}
 
 	async fn find(id: uuid::Uuid) -> Result<TodoItem, APIError> {
-		let connection = connect();
-		let result = todos::table.find(id).get_result::<TodoItem>(&connection);
+		let result = todos::table.find(id).get_result::<TodoItem>(&connect());
 
 		match result {
 			Ok (result) => Ok(result),
@@ -47,13 +45,16 @@ impl Model for TodoItem {
 		}
 	}
 
-	async fn save(&self) -> Result<bool, APIError> {
-		let connection = connect();
+	async fn save(&self) -> Result<uuid::Uuid, APIError> {
+		// If it doesn't exist then call create() instead
+		if let Err(_) = TodoItem::find(self.id).await {
+			return self.create().await;
+		}
 
 		// NOTE: Manually set each field since we don't want to change `created_at`
 		// and there isn't a (good) way to skip a AsChangeset field
 		// See https://github.com/diesel-rs/diesel/issues/860
-		let result = diesel::update(todos::table.find(self.id))
+		let result: QueryResult<TodoItem> = diesel::update(todos::table.find(self.id))
 			.set((
 				todos::title.eq(&self.title),
 				todos::body.eq(&self.body),
@@ -61,20 +62,23 @@ impl Model for TodoItem {
 				todos::archived.eq(&self.archived),
 				todos::updated_at.eq(chrono::Utc::now().naive_utc())
 			))
-			.execute(&connection);
+			.get_result(&connect());
 
 		match result {
-			Ok (_) => Ok(true),
-			Err(e) => Err(APIError::UnknownError(e.into()))
+			Ok (result) => Ok(result.id),
+			Err(e)      => Err(APIError::UnknownError(e.into()))
 		}
 	}
 
 	async fn create(&self) -> Result<uuid::Uuid, APIError> {
-		let connection = connect();
+		// If it exists then call save() instead
+		if let Ok(_) = TodoItem::find(self.id).await {
+			return self.save().await;
+		}
 
 		let result: QueryResult<TodoItem> = diesel::insert_into(todos::table)
 			.values(self.clone())
-			.get_result(&connection);
+			.get_result(&connect());
 
 		match result {
 			Ok (todo) => Ok(todo.id),

@@ -23,7 +23,7 @@ struct TodoRequest {
 }
 
 impl TodoRequest {
-	fn into_todo_item(self) -> TodoItem {
+	fn into_todo_item(&self) -> TodoItem {
 		let uuid = match self.id {
 			Some(id) => id,
 			None     => uuid::Uuid::new_v4()
@@ -31,8 +31,8 @@ impl TodoRequest {
 
 		TodoItem {
 			id: uuid,
-			title: self.title,
-			body: self.body,
+			title: self.title.clone(),
+			body: self.body.clone(),
 			completed: self.completed,
 			archived: self.archived,
 			todo_list_id: self.todo_list_id,
@@ -158,6 +158,7 @@ async fn get_all_todos() -> Result<impl warp::Reply, warp::Rejection> {
 	for todo in todos {
 		let result: TodoResponse;
 
+		// TODO: Can obj cache this
 		if let Some(id) = todo.todo_list_id {
 			let list = TodoList::find(id).await.unwrap(); // TODO: Error handling
 			result = TodoResponse::from_todo_and_list(todo, list);
@@ -172,22 +173,28 @@ async fn get_all_todos() -> Result<impl warp::Reply, warp::Rejection> {
 }
 
 // PUT /api/todo
-async fn add_todo(todo: TodoRequest) -> Result<impl warp::Reply, warp::Rejection> {
-	let todo = todo.into_todo_item();
+async fn add_todo(request: TodoRequest) -> Result<impl warp::Reply, warp::Rejection> {
+	let todo = request.into_todo_item();
 
 	match todo.create().await {
-		Ok(id) => Ok(http_ok(format!("Created todo `{}`", id))),
+		Ok(id) => Ok(http_ok(
+			format!("Created todo `{}`", request.title),
+			id,
+		)),
 		Err(e) => Err(reject::custom(e)),
 	}
 }
 
 // POST /api/todo/3
-async fn update_todo(id: uuid::Uuid, mut todo: TodoRequest) -> Result<impl warp::Reply, warp::Rejection> {
-	todo.id  = Some(id);
-	let todo = todo.into_todo_item();
+async fn update_todo(id: uuid::Uuid, mut request: TodoRequest) -> Result<impl warp::Reply, warp::Rejection> {
+	request.id = Some(id);
+	let todo = request.into_todo_item();
 
 	match todo.save().await {
-		Ok (_) => Ok(http_ok(format!("Updated todo '{}'", todo.id))),
+		Ok (_) => Ok(http_ok(
+			format!("Updated todo '{}'", todo.title),
+			todo.id,
+		)),
 		Err(e) => Err(reject::custom(e)),
 	}
 

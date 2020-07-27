@@ -19,9 +19,7 @@ pub struct TodoList {
 #[async_trait]
 impl Model for TodoList {
 	async fn all() -> Result<Vec<TodoList>, APIError> {
-		let connection = connect();
-
-		let results = lists::table.load::<TodoList>(&connection);
+		let results = lists::table.load::<TodoList>(&connect());
 
 		match results {
 			Ok (results) => Ok(results),
@@ -30,8 +28,7 @@ impl Model for TodoList {
 	}
 
 	async fn find(id: uuid::Uuid) -> Result<TodoList, APIError> {
-		let connection = connect();
-		let result = lists::table.find(id).get_result::<TodoList>(&connection);
+		let result = lists::table.find(id).get_result::<TodoList>(&connect());
 
 		match result {
 			Ok (result) => Ok(result),
@@ -42,12 +39,42 @@ impl Model for TodoList {
 		}
 	}
 
-	async fn save(&self) -> Result<bool, APIError> {
-		todo!()
+	async fn save(&self) -> Result<uuid::Uuid, APIError> {
+		// If it doesn't exist then call create() instead
+		if let Err(_) = TodoList::find(self.id).await {
+			return self.create().await;
+		}
+
+		// NOTE: Manually set each field since we don't want to change `created_at`
+		// and there isn't a (good) way to skip a AsChangeset field
+		// See https://github.com/diesel-rs/diesel/issues/860
+		let result: QueryResult<TodoList> = diesel::update(lists::table.find(self.id))
+			.set((
+				lists::name.eq(&self.name),
+				lists::updated_at.eq(chrono::Utc::now().naive_utc())
+			))
+			.get_result(&connect());
+
+		match result {
+			Ok (result) => Ok(result.id),
+			Err(e)      => Err(APIError::UnknownError(e.into()))
+		}
 	}
 
 	async fn create(&self) -> Result<uuid::Uuid, APIError> {
-		todo!()
+		// If it exists then call save() instead
+		if let Ok(_) = TodoList::find(self.id).await {
+			return self.save().await;
+		}
+
+		let result: QueryResult<TodoList> = diesel::insert_into(lists::table)
+			.values(self.clone())
+			.get_result(&connect());
+
+		match result {
+			Ok (todo) => Ok(todo.id),
+			Err(e)    => Err(APIError::UnknownError(e.into()))
+		}
 	}
 }
 

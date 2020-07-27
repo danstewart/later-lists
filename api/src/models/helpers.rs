@@ -25,6 +25,6 @@ use async_trait::async_trait;
 pub trait Model where Self: Sized {
 	async fn all()                -> Result<Vec<Self>, APIError>;
 	async fn find(id: uuid::Uuid) -> Result<Self, APIError>;
-	async fn save(&self)          -> Result<bool, APIError>;
+	async fn save(&self)          -> Result<uuid::Uuid, APIError>;
 	async fn create(&self)        -> Result<uuid::Uuid, APIError>;
 }
