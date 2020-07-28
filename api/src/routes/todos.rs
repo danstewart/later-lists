@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use warp::{Filter, Reply, reject, filters::BoxedFilter};
 use serde::{Deserialize, Serialize};
 use anyhow::{Result};
@@ -19,7 +20,7 @@ struct TodoRequest {
 	body: String,
 	completed: bool,
 	archived: bool,
-	todo_list_id: Option<uuid::Uuid>,
+	todo_list_id: uuid::Uuid,
 }
 
 impl TodoRequest {
@@ -109,6 +110,7 @@ pub async fn load_routes() -> BoxedFilter<(impl Reply,)> {
 	let all = warp::get()
 		.and(warp::path("api"))
 		.and(warp::path("todos"))
+		.and(warp::query::<HashMap<String, String>>())
 		.and(warp::path::end())
 		.and_then(get_all_todos);
 
@@ -132,13 +134,7 @@ async fn get_todo(id: uuid::Uuid) -> Result<impl warp::Reply, warp::Rejection> {
 		Err(e)     => return Err(reject::custom(e)),
 	};
 
-	// If not in a list just return the todo
-	let list_id = match todo.todo_list_id {
-		Some(list_id) => list_id,
-		None          => return Ok(warp::reply::json(&todo))
-	};
-
-	let list = match TodoList::find(list_id).await {
+	let list = match TodoList::find(todo.todo_list_id).await {
 		Ok (list) => list,
 		Err(e)    => return Err(reject::custom(e))
 	};
@@ -148,8 +144,13 @@ async fn get_todo(id: uuid::Uuid) -> Result<impl warp::Reply, warp::Rejection> {
 }
 
 // GET /api/todo
-async fn get_all_todos() -> Result<impl warp::Reply, warp::Rejection> {
-	let todos = match TodoItem::all().await {
+async fn get_all_todos(qs: HashMap<String, String>) -> Result<impl warp::Reply, warp::Rejection> {
+	let filter: Option<HashMap<String, String>> = match qs.is_empty() {
+		true  => None,
+		false => Some(qs),
+	};
+
+	let todos = match TodoItem::all(filter).await {
 		Ok (todos) => todos,
 		Err(e)     => return Err(reject::custom(e)),
 	};
@@ -159,12 +160,8 @@ async fn get_all_todos() -> Result<impl warp::Reply, warp::Rejection> {
 		let result: TodoResponse;
 
 		// TODO: Can obj cache this
-		if let Some(id) = todo.todo_list_id {
-			let list = TodoList::find(id).await.unwrap(); // TODO: Error handling
-			result = TodoResponse::from_todo_and_list(todo, list);
-		} else {
-			result = TodoResponse::from_todo(todo);
-		}
+		let list = TodoList::find(todo.todo_list_id).await.unwrap(); // TODO: Error handling
+		result = TodoResponse::from_todo_and_list(todo, list);
 
 		results.push(result);
 	}

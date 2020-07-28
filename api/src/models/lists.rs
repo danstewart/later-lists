@@ -6,6 +6,7 @@ use async_trait::async_trait;
 use crate::errors::APIError;
 use crate::schema::lists;
 use super::helpers::{connect, Model};
+use std::collections::HashMap;
 
 #[derive(Queryable, Insertable, Identifiable, AsChangeset, Debug, Deserialize, Serialize, Clone)]
 #[table_name="lists"]
@@ -18,7 +19,7 @@ pub struct TodoList {
 
 #[async_trait]
 impl Model for TodoList {
-	async fn all() -> Result<Vec<TodoList>, APIError> {
+	async fn all(filter: Option<HashMap<String, String>>) -> Result<Vec<TodoList>, APIError> {
 		let results = lists::table.load::<TodoList>(&connect());
 
 		match results {

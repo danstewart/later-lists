@@ -4,7 +4,7 @@ CREATE TABLE todos (
 	body TEXT NOT NULL,
 	completed BOOLEAN NOT NULL DEFAULT 'f',
 	archived BOOLEAN NOT NULL DEFAULT 'f',
-	todo_list_id UUID DEFAULT NULL,
+	todo_list_id UUID NOT NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 	updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

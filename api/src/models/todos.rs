@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use anyhow::{anyhow, Result};
 use diesel::prelude::*;
@@ -17,15 +18,20 @@ pub struct TodoItem {
 	pub body: String,
 	pub completed: bool,
 	pub archived: bool,
-	pub todo_list_id: Option<uuid::Uuid>,
+	pub todo_list_id: uuid::Uuid,
 	pub created_at: chrono::NaiveDateTime,
 	pub updated_at: chrono::NaiveDateTime,
 }
 
 #[async_trait]
 impl Model for TodoItem {
-	async fn all() -> Result<Vec<TodoItem>, APIError> {
-		let results = todos::table.load::<TodoItem>(&connect());
+	async fn all(filter: Option<HashMap<String, String>>) -> Result<Vec<TodoItem>, APIError> {
+		eprintln!("{:?}", filter);
+		let results = match filter {
+			// TODO: Fix this monstrosity
+			Some(filter) => todos::table.filter(todos::todo_list_id.eq(uuid::Uuid::parse_str(filter.get("list").unwrap()).unwrap())).load::<TodoItem>(&connect()),
+			None         => todos::table.load::<TodoItem>(&connect()),
+		};
 
 		match results {
 			Ok (results) => Ok(results),

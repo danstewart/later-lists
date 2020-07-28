@@ -6,7 +6,6 @@
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use dotenv::dotenv;
-use std::env;
 
 pub fn connect() -> PgConnection {
 	dotenv().ok();
@@ -17,14 +16,15 @@ pub fn connect() -> PgConnection {
 
 
 // Base model trait
+use std::{collections::HashMap, env};
 use anyhow::Result;
 use crate::errors::APIError;
 use async_trait::async_trait;
 
 #[async_trait]
 pub trait Model where Self: Sized {
-	async fn all()                -> Result<Vec<Self>, APIError>;
+	async fn all(filter: Option<HashMap<String, String>>) -> Result<Vec<Self>, APIError>;
 	async fn find(id: uuid::Uuid) -> Result<Self, APIError>;
-	async fn save(&self)          -> Result<uuid::Uuid, APIError>;
-	async fn create(&self)        -> Result<uuid::Uuid, APIError>;
+	async fn save(&self) -> Result<uuid::Uuid, APIError>;
+	async fn create(&self) -> Result<uuid::Uuid, APIError>;
 }

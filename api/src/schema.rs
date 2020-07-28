@@ -14,7 +14,7 @@ table! {
         body -> Text,
         completed -> Bool,
         archived -> Bool,
-        todo_list_id -> Nullable<Uuid>,
+        todo_list_id -> Uuid,
         created_at -> Timestamp,
         updated_at -> Timestamp,
     }

@@ -105,7 +105,7 @@ async fn get_todo(id: uuid::Uuid) -> Result<impl warp::Reply, warp::Rejection> {
 
 // GET /api/todo
 async fn get_all_todos() -> Result<impl warp::Reply, warp::Rejection> {
-	let todos = match TodoList::all().await {
+	let todos = match TodoList::all(None).await {
 		Ok (todos) => todos,
 		Err(e)     => return Err(reject::custom(e)),
 	};
