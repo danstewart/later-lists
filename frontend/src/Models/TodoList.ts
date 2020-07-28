@@ -2,7 +2,7 @@
 
 import m from 'mithril';
 import { ITodo, TodoItem } from '/Models/TodoItem';
-import { TodoItemDAO } from '../DAO/TodoItem';
+import { DAO } from '../DAO/Base';
 import { Store } from '/store';
 import { v4 as uuidv4 } from 'uuid';
 import { Settings } from '/settings';
@@ -10,7 +10,9 @@ import { Settings } from '/settings';
 interface ITodoList {
 	id: string,
 	name: string,
-	todos: Array<TodoItem>,
+	todos: {
+		[id: string]: TodoItem
+	},
 }
 
 const store = new Store();
@@ -19,7 +21,7 @@ class TodoList {
 	id: string;
 	name: string;
 	todos: {
-		[id: number]: TodoItem
+		[id: string]: TodoItem
 	};
 
 	constructor(name: string, id: string = uuidv4()) {
@@ -67,12 +69,12 @@ class TodoList {
 	}
 
 	// Loads a list from a DAO
-	async load(dao: TodoItemDAO = Settings.DAO): Promise<Array<ITodo>> {
+	async load(dao: DAO<ITodo> = Settings.DAO.Todo): Promise<Array<ITodo>> {
 		return dao.fetchAll();
 	}
 
 	// Saves a list via the DAO
-	async save(dao: TodoItemDAO = Settings.DAO): Promise<any> {
+	async save(dao: DAO<ITodo> = Settings.DAO.Todo): Promise<any> {
 		dao.saveAll(this.all());
 		return Promise.resolve();
 	}

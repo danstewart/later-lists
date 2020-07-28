@@ -1,31 +1,10 @@
-import { ITodo, TodoItem } from '/Models/TodoItem';
-import { v4 as uuidv4 } from 'uuid';
+import { ITodo } from '/Models/TodoItem';
+import { API as BaseAPI, LocalStorage as BaseLocalStorage } from './Base';
 
-// Base Data Access Object
-abstract class DAO {
-	// Save
-	abstract async save(item: ITodo): Promise<void>;
-	abstract async saveAll(items: Array<ITodo>): Promise<void>;
+class LocalStorage extends BaseLocalStorage<ITodo> {}
 
-	// Retrieve
-	abstract async fetch(id: number): Promise<ITodo> | null;
-	abstract async fetchAll(): Promise<Array<ITodo>>;
-}
-
-class API extends DAO {
-	private static endpoint: string = 'http://127.0.0.1:3030/api/todos';
-
-	async fetch(id: number) {
-		let res = await fetch(`${API.endpoint}/${id}`);
-		let todo = JSON.parse(await res.json());
-		return new Promise<ITodo>((resolve) => resolve(todo));
-	}
-
-	async fetchAll() {
-		let res = await fetch(`${API.endpoint}`);
-		let todos = await res.json();
-		return new Promise<Array<ITodo>>((resolve) => resolve(todos));
-	}
+class API extends BaseAPI<ITodo> {
+	endpoint: string = 'http://127.0.0.1:3030/api/todos';
 
 	async save(item: ITodo) {
 		// Override JSON serialization for DayJS
@@ -33,35 +12,7 @@ class API extends DAO {
 			return item.created.format("YYYY-MM-DDTHH:mm:ss");
 		}
 
-		if (item.id) {
-			// Update
-			await fetch(`${API.endpoint}/${item.id}`, {
-				method: 'POST',
-				headers: {
-					'Accept': 'application/json',
-					'Content-Type': 'application/json; charset=UTF-8'
-				},
-				body: JSON.stringify(item),
-			});
-		} else {
-			// Insert
-			item.id = uuidv4();
-			await fetch(`${API.endpoint}`, {
-				method: 'PUT',
-				headers: {
-					'Accept': 'application/json',
-					'Content-Type': 'application/json; charset=UTF-8'
-				},
-				body: JSON.stringify(item),
-			});
-		}
-
-		return Promise.resolve();
-	}
-
-	saveAll(items: Array<ITodo>) {
-		items.forEach(item => this.save(item));
-		return Promise.resolve();
+		return super.save(item);
 	}
 }
 
@@ -95,43 +46,7 @@ class WSocket extends API {
 	}
 }
 
-// LocalStorage as DAO
-class LocalStorage extends DAO {
-	private async load(): Promise<Array<ITodo>> | null {
-		const stored = localStorage.getItem('todos');
-		if (stored) return JSON.parse(stored);
-		console.warn(`Failed to load todos from LocalStorage`);
-	}
-
-	private store(items: Array<ITodo>): void {
-		localStorage.setItem('todos', JSON.stringify(items));
-	}
-
-	async fetch(id: number) {
-		const stored = this.load();
-		if (stored && stored[id]) return new Promise<ITodo>(stored[id]);
-		console.warn(`Failed to load todo ${id} from LocalStorage`);
-		return null;
-	}
-
-	async fetchAll() {
-		const stored = await this.load() || new Array<ITodo>();
-		return new Promise<Array<ITodo>>(resolve => resolve(stored));
-	}
-
-	async save(item: ITodo) {
-		const stored = await this.load();
-		stored[item.id] = item;
-		this.store(stored);
-	}
-
-	async saveAll(items: Array<ITodo>) {
-		this.store(items);
-	}
-}
-
 export {
-	DAO as TodoItemDAO,
 	API as TodoAPI,
 	LocalStorage as TodoLocalStorage,
 	WSocket as TodoWebSocket,

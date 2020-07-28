@@ -3,12 +3,12 @@ import dayjs, { Dayjs } from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { v4 as uuidv4 } from 'uuid';
 import { Settings } from '/settings';
-import { TodoItemDAO } from '../DAO/TodoItem';
+import { DAO } from '../DAO/Base';
 
 dayjs.extend(utc);
 
 interface ITodo {
-	id?: number,
+	id?: string,
 	title: string,
 	body: string,
 	list: string,
@@ -20,7 +20,7 @@ interface ITodo {
 const store = new Store();
 
 class TodoItem implements ITodo {
-	id: number;
+	id: string;
 	title: string;
 	body: string;
 	list: string;
@@ -40,11 +40,6 @@ class TodoItem implements ITodo {
 		this.archived  = args.archived || false;
 		this.created   = dayjs.utc(args.created) || dayjs.utc();
 
-		// Set the lastId accordingly
-		if (args.id && args.id > TodoItem.lastId) {
-			TodoItem.lastId = args.id;
-		}
-
 		// Whenever a todo changes re-save it
 		store.subscribe(`todo-${this.id}`, () => this.save());
 	}
@@ -60,7 +55,7 @@ class TodoItem implements ITodo {
 	}
 
 	// Saves a list via the DAO
-	async save(dao: TodoItemDAO = Settings.DAO): Promise<any> {
+	async save(dao: DAO<ITodo> = Settings.DAO.Todo): Promise<any> {
 		dao.save(this);
 		return Promise.resolve();
 	}
