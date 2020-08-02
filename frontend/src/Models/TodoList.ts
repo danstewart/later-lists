@@ -6,6 +6,7 @@ import { DAO } from '../DAO/Base';
 import { Store } from '/store';
 import { v4 as uuidv4 } from 'uuid';
 import { Settings } from '/settings';
+import { Dayjs } from 'dayjs';
 
 interface ITodoList {
 	id: string,
@@ -65,6 +66,7 @@ class TodoList {
 	push(todo: TodoItem): TodoList {
 		this.todos[todo.id] = todo;
 		// this.store.publish('todos');
+		m.redraw();
 		return this;
 	}
 
@@ -89,6 +91,8 @@ class TodoList {
 	}
 
 	async init() {
+		// Load todos
+		// TODO: Pass the listid to this
 		let stored = await this.load();
 
 		if (stored.length) {

@@ -1,20 +1,10 @@
 import m from 'mithril';
 import { TodoSidebar } from '/Components/Sidebars';
 import { TodoForm } from '/Components/TodoForm';
-import { TodoListBuilder } from '/Components/TodoList';
+import { TodoListBuilder } from '../Components/TodoListBuilder';
 import { TodoItem } from '/Models/TodoItem';
 import { TodoList } from '/Models/TodoList';
 import { TodoListAPI } from '/DAO/TodoList';
-
-// Load all lists
-let lists = [];
-new TodoListAPI().fetchAll().then(lists => {
-	lists.map(list => new TodoList(list.name, list.id));
-
-	// Redraw
-	m.mount(document.querySelector('#sidebar'), new TodoSidebar());
-	m.redraw();
-});
 
 const todoForm = new TodoForm();
 const saveTodo = () => {
@@ -39,13 +29,22 @@ const editTodo = (todo) => {
 	todoForm.set(todo);
 }
 
+let lists = [];
 export default {
-	view: () => m('div.container', [
-		lists.map(list => {
-			new TodoListBuilder(list).view({ attrs: { edit: editTodo }});
-		}),
-		m('br'),
-		m('button.FAB', { onclick: () => todoForm.show() }, '+'),
-		todoForm.view({ attrs: { onclick: () => saveTodo() }}),
-	])
+	oninit: async () => {
+		lists = await new TodoListAPI().fetchAll();
+		lists = lists.map(list => new TodoList(list.name, list.id));
+		m.mount(document.querySelector('#sidebar'), new TodoSidebar());
+		m.redraw();
+	},
+
+	view: () => {
+		let ayy = m('div.container', [
+			lists.map(l => new TodoListBuilder(l).view({ attrs: { edit: editTodo }})),
+			m('br'),
+			m('button.FAB', { onclick: () => todoForm.show() }, '+'),
+			todoForm.view({ attrs: { onclick: () => saveTodo() }}),
+		]);
+		return ayy;
+	}
 };
