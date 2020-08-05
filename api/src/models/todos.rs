@@ -26,10 +26,9 @@ pub struct TodoItem {
 #[async_trait]
 impl Model for TodoItem {
 	async fn all(filter: Option<HashMap<String, String>>) -> Result<Vec<TodoItem>, APIError> {
-		eprintln!("{:?}", filter);
 		let results = match filter {
 			// TODO: Fix this monstrosity
-			Some(filter) => todos::table.filter(todos::todo_list_id.eq(uuid::Uuid::parse_str(filter.get("list").unwrap()).unwrap())).load::<TodoItem>(&connect()),
+			Some(filter) => todos::table.filter(todos::todo_list_id.eq(uuid::Uuid::parse_str(filter.get("list_id").unwrap()).unwrap())).load::<TodoItem>(&connect()),
 			None         => todos::table.load::<TodoItem>(&connect()),
 		};
 

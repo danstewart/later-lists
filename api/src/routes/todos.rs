@@ -20,7 +20,7 @@ struct TodoRequest {
 	body: String,
 	completed: bool,
 	archived: bool,
-	todo_list_id: uuid::Uuid,
+	list_id: uuid::Uuid,
 }
 
 impl TodoRequest {
@@ -36,7 +36,7 @@ impl TodoRequest {
 			body: self.body.clone(),
 			completed: self.completed,
 			archived: self.archived,
-			todo_list_id: self.todo_list_id,
+			todo_list_id: self.list_id,
 			created_at: chrono::Utc::now().naive_utc(),
 			updated_at: chrono::Utc::now().naive_utc(),
 		}
@@ -50,8 +50,8 @@ struct TodoResponse {
 	body: String,
 	completed: bool,
 	archived: bool,
-	todo_list_id: Option<uuid::Uuid>,
-	todo_list_name: Option<String>,
+	list_id: Option<uuid::Uuid>,
+	list_name: Option<String>,
 	created_at: chrono::NaiveDateTime,
 	updated_at: chrono::NaiveDateTime,
 }
@@ -64,8 +64,8 @@ impl TodoResponse {
 			body: todo.body,
 			completed: todo.completed,
 			archived: todo.archived,
-			todo_list_id: Some(list.id),
-			todo_list_name: Some(list.name),
+			list_id: Some(list.id),
+			list_name: Some(list.name),
 			created_at: todo.created_at,
 			updated_at: todo.updated_at,
 		}
@@ -78,8 +78,8 @@ impl TodoResponse {
 			body: todo.body,
 			completed: todo.completed,
 			archived: todo.archived,
-			todo_list_id: None,
-			todo_list_name: None,
+			list_id: None,
+			list_name: None,
 			created_at: todo.created_at,
 			updated_at: todo.updated_at,
 		}

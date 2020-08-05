@@ -40,7 +40,7 @@ async fn main() {
 		// .allow_headers(vec!["*"])
 		.allow_methods(&[Method::POST, Method::GET, Method::PUT]);
 
-	warp::serve(routes.with(cors).recover(errors::handle_err))
+	warp::serve(routes.recover(errors::handle_err).with(cors))
 		.run(([127, 0, 0, 1], 3030))
 		.await;
 }

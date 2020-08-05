@@ -11,7 +11,8 @@ interface ITodo {
 	id?: string,
 	title: string,
 	body: string,
-	list: string,
+	list_id: string,
+	list_name: string,
 	completed?: boolean,
 	archived?: boolean,
 	created?: Dayjs,
@@ -23,7 +24,8 @@ class TodoItem implements ITodo {
 	id: string;
 	title: string;
 	body: string;
-	list: string;
+	list_id: string;
+	list_name: string;
 	completed: boolean;
 	archived: boolean;
 	created: Dayjs;
@@ -35,13 +37,11 @@ class TodoItem implements ITodo {
 		this.id        = args.id || uuidv4();
 		this.title     = args.title;
 		this.body      = args.body;
-		this.list      = args.list;
+		this.list_id   = args.list_id;
+		this.list_name = args.list_name;
 		this.completed = args.completed || false;
 		this.archived  = args.archived || false;
 		this.created   = dayjs.utc(args.created) || dayjs.utc();
-
-		// Whenever a todo changes re-save it
-		store.subscribe(`todo-${this.id}`, () => this.save());
 	}
 
 	// Update a todo
@@ -50,7 +50,7 @@ class TodoItem implements ITodo {
 			if (args[prop]) this[prop] = args[prop];
 		})
 
-		store.publish(`todo-${args.id}`);
+		this.save();
 		store.publish('todos');
 	}
 
@@ -63,12 +63,14 @@ class TodoItem implements ITodo {
 	// Change state
 	toggleStatus(): void {
 		this.completed = !this.completed;
+		this.save();
 		store.publish('todos');
 	}
 
 	// Update to be archived
 	archive(): void {
 		this.archived = true;
+		this.save();
 		store.publish('todos');
 	}
 }

@@ -6,7 +6,6 @@ import { DAO } from '../DAO/Base';
 import { Store } from '/store';
 import { v4 as uuidv4 } from 'uuid';
 import { Settings } from '/settings';
-import { Dayjs } from 'dayjs';
 
 interface ITodoList {
 	id: string,
@@ -32,19 +31,16 @@ class TodoList {
 
 		this.init().then(() => m.redraw());
 
-		if (!store['lists']) store['lists'] = new Set<TodoList>();
-		store['lists'].add(this);
+		if (!store['lists']) store['lists'] = new Map<string, TodoList>()
+		store['lists'].set(this.id, this);
+		store.publish('lists');
 
 		// Whenever a todo changes store the lists and save everything
-		/*
-		this.store.subscribe('todos', () => {
+		store.subscribe('todos', () => {
 			let lists = new Set<string>();
-
-			Object.values(this.todos).filter(t => !t.archived).forEach(t => lists.add(t.list));
-
-			this.store['lists'] = lists;
+			Object.values(this.todos).filter(t => !t.archived).forEach(t => lists.add(t.list_name));
+			store['lists'] = lists;
 		});
-		*/
 	}
 
 	selected() {
@@ -72,7 +68,7 @@ class TodoList {
 
 	// Loads a list from a DAO
 	async load(dao: DAO<ITodo> = Settings.DAO.Todo): Promise<Array<ITodo>> {
-		return dao.fetchAll();
+		return dao.fetchAll({ list_id: this.id });
 	}
 
 	// Saves a list via the DAO

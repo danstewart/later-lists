@@ -35,7 +35,7 @@ class TodoItemBuilder {
 			m('div.flex-row.space-between', [
 				m('div.flex-col', [
 					m('div', [
-						m('span.tag.is-rounded', this.todo.list),
+						m('span.tag.is-rounded', this.todo.list_name),
 					]),
 				]),
 				m('div', { style: 'align-self: flex-end' }, [

@@ -7,12 +7,12 @@ interface hasId {
 // Base Data Access Object
 abstract class DAO<T extends hasId> {
 	// Save
-	abstract async save(item: T): Promise<void>;
-	abstract async saveAll(items: Array<T>): Promise<void>;
+	abstract async save(item: T, opts?: Object): Promise<void>;
+	abstract async saveAll(items: Array<T>, opts?: Object): Promise<void>;
 
 	// Retrieve
-	abstract async fetch(id: number): Promise<T> | null;
-	abstract async fetchAll(): Promise<Array<T>>;
+	abstract async fetch(id: number, opts?: Object): Promise<T> | null;
+	abstract async fetchAll(opts?: Object): Promise<Array<T>>;
 }
 
 class LocalStorage<T extends hasId> extends DAO<T> {
@@ -33,7 +33,7 @@ class LocalStorage<T extends hasId> extends DAO<T> {
 		return null;
 	}
 
-	async fetchAll() {
+	async fetchAll(opts: Object) {
 		const stored = await this.load() || new Array<T>();
 		return new Promise<Array<T>>(resolve => resolve(stored));
 	}
@@ -52,19 +52,19 @@ class LocalStorage<T extends hasId> extends DAO<T> {
 abstract class API<T extends hasId> extends DAO<T> {
 	abstract endpoint: string;
 
-	async fetch(id: number) {
+	async fetch(id: number, opts = {}) {
 		let res = await fetch(`${this.endpoint}/${id}`);
 		let todo = JSON.parse(await res.json());
 		return new Promise<T>((resolve) => resolve(todo));
 	}
 
-	async fetchAll() {
-		let res = await fetch(`${this.endpoint}`);
+	async fetchAll(opts = {}) {
+		let res = await fetch(`${this.endpoint}?` + new URLSearchParams(opts));
 		let todos = await res.json();
 		return new Promise<Array<T>>((resolve) => resolve(todos));
 	}
 
-	async save(item: T) {
+	async save(item: T, opts = {}) {
 		if (item.id) {
 			// Update
 			await fetch(`${this.endpoint}/${item.id}`, {
@@ -91,7 +91,7 @@ abstract class API<T extends hasId> extends DAO<T> {
 		return Promise.resolve();
 	}
 
-	saveAll(items: Array<T>) {
+	saveAll(items: Array<T>, opts = {}) {
 		items.forEach(item => this.save(item));
 		return Promise.resolve();
 	}

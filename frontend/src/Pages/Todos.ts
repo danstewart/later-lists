@@ -6,45 +6,66 @@ import { TodoItem } from '/Models/TodoItem';
 import { TodoList } from '/Models/TodoList';
 import { TodoListAPI } from '/DAO/TodoList';
 
+let listMap: Map<string, TodoList> = new Map<string, TodoList>();
 const todoForm = new TodoForm();
-const saveTodo = () => {
-	const id    = todoForm.field('todoId')?.value;
-	const title = todoForm.field('title')?.value;
-	const body  = todoForm.field('body')?.value;
-	const list  = todoForm.field('list')?.value;
 
-	if (id) {
-		// todos.edit(id, { title: title, body: body, list: list });
-	} else {
-		let todo = new TodoItem({ title: title, body: body, list: list });
-		// todos.push(todo);
-	}
+class Todos {
 
-	todoForm.reset();
-	todoForm.hide();
-};
+	async oninit() {
+		let lists = await new TodoListAPI().fetchAll();
+		lists.forEach(list => {
+			listMap.set(list.id, new TodoList(list.name, list.id));
+		})
 
-const editTodo = (todo) => {
-	todoForm.show();
-	todoForm.set(todo);
-}
-
-let lists = [];
-export default {
-	oninit: async () => {
-		lists = await new TodoListAPI().fetchAll();
-		lists = lists.map(list => new TodoList(list.name, list.id));
 		m.mount(document.querySelector('#sidebar'), new TodoSidebar());
 		m.redraw();
-	},
+	}
 
-	view: () => {
-		let ayy = m('div.container', [
-			lists.map(l => new TodoListBuilder(l).view({ attrs: { edit: editTodo }})),
+	saveTodo() {
+		const id      = todoForm.field('todoId')?.value;
+		const title   = todoForm.field('title')?.value;
+		const body    = todoForm.field('body')?.value;
+		const list    = todoForm.field('list')?.value;
+		const list_id = todoForm.field('list_id')?.value;
+
+		if (id) {
+			todoForm.editing.update({ title: title, body: body, list_name: list, list_id: list_id});
+			todoForm.editing.save();
+		} else {
+			let todo = new TodoItem({ title: title, body: body, list_name: list, list_id: list_id });
+			
+			if (listMap.has(list_id))
+				listMap.get(list_id).push(todo);
+			else
+				// TODO
+				console.log("NEW LIST")
+		}
+
+		todoForm.reset();
+		todoForm.hide();
+};
+
+	editTodo(todo) {
+		todoForm.show();
+		todoForm.set(todo);
+	}
+
+	renderList() {
+		if (listMap.size === 0) {
+			return m('p', 'Nothing todo :-)');
+		}
+
+		return Array.from(listMap.values()).map(list => new TodoListBuilder(list).view({ attrs: { edit: this.editTodo }}));
+	}
+
+	view() {
+		return m('div.container', [
+			this.renderList(),
 			m('br'),
 			m('button.FAB', { onclick: () => todoForm.show() }, '+'),
-			todoForm.view({ attrs: { onclick: () => saveTodo() }}),
+			todoForm.view({ attrs: { onclick: () => this.saveTodo() }}),
 		]);
-		return ayy;
 	}
-};
+}
+
+export default Todos;

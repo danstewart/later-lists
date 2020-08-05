@@ -5,7 +5,7 @@ import { Store } from '/store';
 const store = new Store();
 
 class TodoSidebar {
-	lists: Set<TodoList>;
+	lists: Map<string, TodoList>;
 
 	constructor() {
 		this.lists = store['lists'];
@@ -19,8 +19,7 @@ class TodoSidebar {
 	}
 
 	drawLists() {
-		let lists: Array<TodoList> = Array.from(this.lists || []);
-
+		let lists = this.lists ? Array.from(this.lists.values()) : [];
 		return lists.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())).map(list => {
 			return m('div', [
 				m('a.button.is-text.has-text-left.with-newlines.sidebar-link', {
