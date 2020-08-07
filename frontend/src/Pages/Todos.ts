@@ -7,63 +7,83 @@ import { TodoList } from '/Models/TodoList';
 import { TodoListAPI } from '/DAO/TodoList';
 
 let listMap: Map<string, TodoList> = new Map<string, TodoList>();
-const todoForm = new TodoForm();
+let todoForm;
 
 class Todos {
+	initialized: boolean = false;
 
 	async oninit() {
-		let lists = await new TodoListAPI().fetchAll();
-		lists.forEach(list => {
-			listMap.set(list.id, new TodoList(list.name, list.id));
-		})
+		try {
+			let lists = await new TodoListAPI().fetchAll();
+			lists.forEach(async list => {
+				let todoList = new TodoList(list.name, list.id);
+				await todoList.init();
+				listMap.set(list.id, todoList);
+			});
+		} catch {
+			// TODO: Show error
+			console.error("Loading lists failed");
+		} finally {
+			todoForm = new TodoForm();
+			m.redraw();
+			m.mount(document.querySelector('#sidebar'), new TodoSidebar());
+		}
 
-		m.mount(document.querySelector('#sidebar'), new TodoSidebar());
-		m.redraw();
+		// TODO: This doesn't quite work, still get a flash of the "No todos" msg
+		this.initialized = true;
 	}
 
 	saveTodo() {
-		const id      = todoForm.field('todoId')?.value;
-		const title   = todoForm.field('title')?.value;
-		const body    = todoForm.field('body')?.value;
-		const list    = todoForm.field('list')?.value;
-		const list_id = todoForm.field('list_id')?.value;
+		const id     = todoForm.field('todoId');
+		const title  = todoForm.field('title');
+		const body   = todoForm.field('body');
+		const list   = todoForm.field('list');
+		const listId = todoForm.field('listId');
 
 		if (id) {
-			todoForm.editing.update({ title: title, body: body, list_name: list, list_id: list_id});
+			todoForm.editing.update({ title: title, body: body, list_name: list, list_id: listId });
 			todoForm.editing.save();
 		} else {
-			let todo = new TodoItem({ title: title, body: body, list_name: list, list_id: list_id });
+			let todo = new TodoItem({ title: title, body: body, list_name: list, list_id: listId });
 			
-			if (listMap.has(list_id))
-				listMap.get(list_id).push(todo);
-			else
+			if (listMap.has(listId)) {
+				listMap.get(listId).push(todo);
+			} else {
 				// TODO
-				console.log("NEW LIST")
+				console.log("NOT IMPLEMENTED: NEW LIST")
+			}
 		}
 
 		todoForm.reset();
 		todoForm.hide();
-};
-
-	editTodo(todo) {
-		todoForm.show();
-		todoForm.set(todo);
 	}
+
 
 	renderList() {
 		if (listMap.size === 0) {
 			return m('p', 'Nothing todo :-)');
 		}
 
-		return Array.from(listMap.values()).map(list => new TodoListBuilder(list).view({ attrs: { edit: this.editTodo }}));
+		const editTodo = (todo) => { todoForm.set(todo); todoForm.show() };
+		return Array.from(listMap.values()).map(list => {
+			if (list.todos.size > 0) {
+				return m(new TodoListBuilder(list), { edit: (todo) => editTodo(todo) });
+			}
+		});
 	}
 
 	view() {
+		if (!this.initialized) {
+			return m('section.section', [
+				m('progress.progress.is-info', { max: 100 })
+			]);
+		}
+
 		return m('div.container', [
 			this.renderList(),
 			m('br'),
 			m('button.FAB', { onclick: () => todoForm.show() }, '+'),
-			todoForm.view({ attrs: { onclick: () => this.saveTodo() }}),
+			m(todoForm, { onclick: () => this.saveTodo() }),
 		]);
 	}
 }

@@ -10,26 +10,20 @@ import { Settings } from '/settings';
 interface ITodoList {
 	id: string,
 	name: string,
-	todos: {
-		[id: string]: TodoItem
-	},
+	todos: Map<string, TodoItem>,
 }
 
 const store = new Store();
 
-class TodoList {
+class TodoList implements ITodoList {
 	id: string;
 	name: string;
-	todos: {
-		[id: string]: TodoItem
-	};
+	todos: Map<string, TodoItem>;
 
 	constructor(name: string, id: string = uuidv4()) {
 		this.id    = id;
 		this.name  = name;
-		this.todos = {};
-
-		this.init().then(() => m.redraw());
+		this.todos = new Map<string, TodoItem>();
 
 		if (!store['lists']) store['lists'] = new Map<string, TodoList>()
 		store['lists'].set(this.id, this);
@@ -37,9 +31,11 @@ class TodoList {
 
 		// Whenever a todo changes store the lists and save everything
 		store.subscribe('todos', () => {
-			let lists = new Set<string>();
-			Object.values(this.todos).filter(t => !t.archived).forEach(t => lists.add(t.list_name));
-			store['lists'] = lists;
+			// let lists = new Set<string>();
+			// Array.from(this.todos.values()).filter(t => !t.archived).forEach(t => lists.add(t.list_name));
+			// store['lists'] = lists;
+			store.publish('lists');
+			m.redraw();
 		});
 	}
 
@@ -55,12 +51,12 @@ class TodoList {
 
 	// Helper for editing a specific item in the list
 	edit(id, edit) {
-		this.todos[id].update(edit);
+		this.todos.get(id).update(edit);
 	}
 
 	// Adds a new item
 	push(todo: TodoItem): TodoList {
-		this.todos[todo.id] = todo;
+		this.todos.set(todo.id, todo);
 		// this.store.publish('todos');
 		m.redraw();
 		return this;
@@ -80,31 +76,18 @@ class TodoList {
 	// Gets all todos in the list
 	all(filter: Function = null): Array<TodoItem> {
 		if (filter) {
-			return Object.values(this.todos).filter(filter());
+			return Array.from(this.todos.values()).filter(filter());
 		}
 
-		return Object.values(this.todos);
+		return Array.from(this.todos.values());
 	}
 
 	async init() {
 		// Load todos
-		// TODO: Pass the listid to this
 		let stored = await this.load();
 
 		if (stored.length) {
 			stored.forEach(element => this.push(new TodoItem(element)));
-		// } else {
-		// 	// Create some example todos
-		// 	const lists = [ 'Example', 'Testing', 'Demo' ];
-		// 	for (let i=1; i<=20; i++) {
-		// 		this.push(new TodoItem({
-		// 			title: `Example Todo ${i}`,
-		// 			body: 'This is an example pending todo',
-		// 			list: lists[Math.floor(Math.random() * lists.length)],
-		// 		}));
-		// 	}
-
-		// 	this.save();
 		}
 
 		return Promise.resolve();

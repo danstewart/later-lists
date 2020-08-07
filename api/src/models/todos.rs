@@ -63,6 +63,7 @@ impl Model for TodoItem {
 			.set((
 				todos::title.eq(&self.title),
 				todos::body.eq(&self.body),
+				todos::todo_list_id.eq(&self.todo_list_id),
 				todos::completed.eq(&self.completed),
 				todos::archived.eq(&self.archived),
 				todos::updated_at.eq(chrono::Utc::now().naive_utc())

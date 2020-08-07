@@ -897,6 +897,11 @@
     "@parcel/utils" "^1.11.0"
     physical-cpu-count "^2.0.0"
 
+"@tarekraafat/autocomplete.js@^7.2.0":
+  version "7.2.0"
+  resolved "https://registry.yarnpkg.com/@tarekraafat/autocomplete.js/-/autocomplete.js-7.2.0.tgz#d6ac9fe78db92d864ec096639e577f7e4b323829"
+  integrity sha512-p1aEcKC/WHpVBuFyRhXq/ie+mgO4QqCNEsdVIPUBgmNqmxV4dVfqYEpk///9vvKyranUUvrlVu4e2tdzAaXKIg==
+
 "@types/mithril@^2.0.2":
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/@types/mithril/-/mithril-2.0.3.tgz#f24a764515d9b17095845838b12f2444757d93fa"

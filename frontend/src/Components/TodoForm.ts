@@ -3,6 +3,7 @@ import { TodoList } from '../Models/TodoList';
 import { Modal } from './Modal';
 import { TodoItem } from '/Models/TodoItem';
 import { Store } from '/store';
+import autoComplete from '@tarekraafat/autocomplete.js/dist/js/autoComplete.min.js';
 
 // TODO:
 // - Form validation
@@ -19,18 +20,24 @@ class TodoForm {
 
 		// Update out copy of the lists whenever they change
 		store.subscribe('lists', () => {
-			this.lists = store['lists'] || new Map<string, TodoList>()
+			this.lists = store['lists'] || new Map<string, TodoList>();
+			m.redraw();
 		});
 
 		this.modal = new Modal();
 	}
 
 	// DOM shortcuts
-	field(id: string): HTMLInputElement {
-		return this.element(id) as HTMLInputElement;
-	}
-	element(id: string): Element {
-		return document.querySelector(`#${id}`);
+	field(id: string, set?: string): string {
+		let el = document.querySelector(`#${id}`) as HTMLInputElement;
+		if (!el) return;
+
+		if (set) {
+			el.value = set;
+			return;
+		}
+
+		return el.value;
 	}
 
 	// Form visibility
@@ -45,31 +52,21 @@ class TodoForm {
 		this.reset();
 	}
 
-	updateId(e) {
-		let list_id = e.target.value;
-
-		if (this.lists && this.lists.has(list_id)) {
-			document.querySelector('#list_id').value = e.target.value;
-			e.target.value = this.lists.get(e.target.value).name;
-		}
-	}
-
-
 	// Form state
 	set(todo: TodoItem) {
 		this.state = 'Edit';
 		this.editing = todo;
-		this.field('todoId').value = todo.id.toString();
-		this.field('title').value = todo.title;
-		this.field('body').value = todo.body;
-		this.field('list').value = todo.list_name;
-		this.field('list_id').value = todo.list_id;
+		this.field('todoId', todo.id.toString());
+		this.field('title', todo.title);
+		this.field('body', todo.body);
+		this.field('list', todo.list_name);
+		this.field('listId', todo.list_id);
 	}
 	reset () {
 		this.state = 'Add';
 		['title', 'body', 'list', 'todoId'].forEach(el => {
 			if (this.field(el)) {
-				this.field(el).value = '';
+				this.field(el, '');
 			}
 		});
 	}
@@ -93,17 +90,11 @@ class TodoForm {
 			m('div.columns', m('div.column.is-one-third', [
 				m('label.label', 'List'),
 				m('div.field', [
-					m('div.control', m('input.input', {
-						id: 'list',
-						list: 'list-list', // Yeah a list of lists, get over it
-						type: 'text',
-						onchange: (e) => this.updateId(e),
-						onkeyup: (e) => this.updateId(e),
-						onkeydown: (e) => this.updateId(e),
-					})),
-					m('input.is-hidden', { id: 'list_id' }),
+					m('div.control', [
+						m('input.input', { id: 'list', type: 'text', tabindex: 1 }),
+						m('input.is-hidden', { id: 'listId' }),
+					]),
 				]),
-				m('datalist', { id: 'list-list' }, Array.from(this.lists.values()).map(t => m('option', { value: t.id }, t.name))),
 			])),
 
 			m('input.input.is-hidden', { id: 'todoId' })
@@ -115,12 +106,39 @@ class TodoForm {
 		]);
 
 		return m('div', [
-			this.modal.view({ attrs: {
+			m(this.modal, {
 				header: `${this.state} Todo`,
 				content: form,
 				footer: submit
-			}}),
+			}),
 		]);
+	}
+
+	oncreate() {
+		new autoComplete({
+			data: {
+				src: Array.from(this.lists.values()),
+				key: ['name']
+			},
+			selector: '#list',
+			placeHolder: 'List',
+			highlight: true,
+			resultsList: {
+				render: true,
+				container: source => source.setAttribute('id', 'list'),
+				destination: document.querySelector('#list'),
+			},
+			onSelection: feedback => {
+				this.field('list', feedback.selection.value.name);
+				this.field('listId', feedback.selection.value.id);
+			},
+			noResults: () => { console.log("** NO RESULTS **") },
+			query: {
+				manipulate: (query) => {
+					return query;
+				}
+			}
+		});
 	}
 }
 

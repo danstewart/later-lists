@@ -46,17 +46,17 @@ class TodoItem implements ITodo {
 
 	// Update a todo
 	update(args: ITodo) {
-		['id', 'title', 'body', 'list', 'completed', 'archived'].forEach(prop => {
+		['id', 'title', 'body', 'list_id', 'list_name', 'completed', 'archived'].forEach(prop => {
 			if (args[prop]) this[prop] = args[prop];
 		})
 
 		this.save();
-		store.publish('todos');
 	}
 
 	// Saves a list via the DAO
 	async save(dao: DAO<ITodo> = Settings.DAO.Todo): Promise<any> {
 		dao.save(this);
+		store.publish('todos');
 		return Promise.resolve();
 	}
 
@@ -64,14 +64,12 @@ class TodoItem implements ITodo {
 	toggleStatus(): void {
 		this.completed = !this.completed;
 		this.save();
-		store.publish('todos');
 	}
 
 	// Update to be archived
 	archive(): void {
 		this.archived = true;
 		this.save();
-		store.publish('todos');
 	}
 }
 
