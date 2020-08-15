@@ -23,7 +23,6 @@ class TodoSidebar {
 
 	drawLists() {
 		let lists = this.lists ? Array.from(this.lists.values()) : [];
-		console.log(lists);
 		lists = lists.filter(l => l.todos.size > 0);
 
 		return lists.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())).map(list => {

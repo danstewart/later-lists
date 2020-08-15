@@ -1,11 +1,39 @@
-import m, { redraw, Vnode } from 'mithril';
+// Base modal component
+// Inherit from this and override header, content and footer to use
+import m, { Vnode } from 'mithril';
 
 class Modal {
-	visible = false;
+	visible: boolean;
+
+	constructor() {
+		this.visible = false;
+	}
+
+	show() {
+		this.visible = true;
+	}
+
+	hide() {
+		this.visible = false;
+	}
 
 	toggle() {
 		this.visible = !this.visible;
-		// m.redraw();
+	}
+
+	header() {
+		return 'Default Modal';
+	}
+
+	content({ attrs }) {
+		return m('p', 'This is the default modal');
+	}
+
+	footer({ attrs }) {
+		return m('div.field', [
+			m('button.button.is-primary', { onclick: () => attrs.onclick() }, 'Submit'),
+			m('button.button.is-text', { onclick: () => this.hide() }, 'Cancel'),
+		]);
 	}
 
 	view({ attrs }): Vnode {
@@ -13,14 +41,14 @@ class Modal {
 			m('div.modal-background', []),
 			m('div.modal-card', [
 				m('header.modal-card-head', [
-					m('p.modal-card-title', attrs.header),
-					m('button.delete', { onclick: () => this.toggle() }),
+					m('p.modal-card-title', this.header()),
+					m('button.delete', { onclick: () => this.hide() }),
 				]),
 				m('section.modal-card-body', [
-					attrs.content,
+					this.content(attrs),
 				]),
 				m('footer.modal-card-foot', [
-					attrs.footer,
+					this.footer(attrs),
 				])
 			]),
 		]);

@@ -15,11 +15,15 @@ class Todos {
 	async oninit() {
 		try {
 			let lists = await new TodoListAPI().fetchAll();
-			lists.forEach(async list => {
+
+			for (let list of lists) {
 				let todoList = new TodoList(list.name, list.id);
 				await todoList.init();
 				listMap.set(list.id, todoList);
-			});
+			}
+
+			this.initialized = true;
+			// setTimeout(() => { this.initialized = true; m.redraw(); }, 2000);
 		} catch {
 			// TODO: Show error
 			console.error("Loading lists failed");
@@ -28,9 +32,6 @@ class Todos {
 			m.redraw();
 			m.mount(document.querySelector('#sidebar'), new TodoSidebar());
 		}
-
-		// TODO: This doesn't quite work, still get a flash of the "No todos" msg
-		this.initialized = true;
 	}
 
 	saveTodo() {
@@ -50,7 +51,7 @@ class Todos {
 				listMap.get(listId).push(todo);
 			} else {
 				// TODO
-				console.log("NOT IMPLEMENTED: NEW LIST")
+				throw("NOT YET IMPLEMENTED: Adding todo to new list");
 			}
 		}
 
@@ -58,13 +59,12 @@ class Todos {
 		todoForm.hide();
 	}
 
-
 	renderList() {
 		if (listMap.size === 0) {
 			return m('p', 'Nothing todo :-)');
 		}
 
-		const editTodo = (todo) => { todoForm.set(todo); todoForm.show() };
+		const editTodo = (todo) => { todoForm.show(); todoForm.set(todo) };
 		return Array.from(listMap.values()).map(list => {
 			if (list.todos.size > 0) {
 				return m(new TodoListBuilder(list), { edit: (todo) => editTodo(todo) });
@@ -82,8 +82,11 @@ class Todos {
 		return m('div.container', [
 			this.renderList(),
 			m('br'),
-			m('button.FAB', { onclick: () => todoForm.show() }, '+'),
-			m(todoForm, { onclick: () => this.saveTodo() }),
+			// Consuming this with the m() function results in funny behaviour when calling methods 
+			// on todoForm directly (like in the FAB below and editForm() above)
+			// I think this is just some funniness in how mithril works under the hood
+			todoForm.view({ attrs: {} }),
+			m('button.FAB', { onclick: () => todoForm.toggle() }, '+'),
 		]);
 	}
 }

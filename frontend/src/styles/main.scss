@@ -2,7 +2,8 @@
 
 // Bulma
 @import "overrides.scss";
-@import "../node_modules/bulma/bulma.sass";
+@import "../../node_modules/bulma/bulma.sass";
+@import "../../node_modules/@tarekraafat/autocomplete.js/dist/css/autoComplete.css";
 
 // My stuff
 @import "flex.scss";

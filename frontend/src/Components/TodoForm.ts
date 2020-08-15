@@ -8,13 +8,14 @@ import autoComplete from '@tarekraafat/autocomplete.js/dist/js/autoComplete.min.
 // TODO:
 // - Form validation
 // - Access form fields via properties
-class TodoForm {
+class TodoForm extends Modal {
 	lists: Map<string, TodoList>;
-	modal: Modal;
 	state: 'Add'|'Edit' = 'Add';
 	editing: TodoItem;
 
 	constructor() {
+		super();
+
 		const store = new Store();
 		this.lists = store['lists'] || new Map<string, TodoList>()
 
@@ -23,33 +24,19 @@ class TodoForm {
 			this.lists = store['lists'] || new Map<string, TodoList>();
 			m.redraw();
 		});
-
-		this.modal = new Modal();
 	}
 
-	// DOM shortcuts
+	// Input element accessor
 	field(id: string, set?: string): string {
 		let el = document.querySelector(`#${id}`) as HTMLInputElement;
 		if (!el) return;
 
-		if (set) {
+		if (set != null) {
 			el.value = set;
 			return;
 		}
 
 		return el.value;
-	}
-
-	// Form visibility
-	show() {
-		if (!this.modal.visible) this.toggleVisibility();
-	}
-	hide() {
-		if (this.modal.visible) this.toggleVisibility();
-	}
-	toggleVisibility() {
-		this.modal.toggle();
-		this.reset();
 	}
 
 	// Form state
@@ -62,8 +49,11 @@ class TodoForm {
 		this.field('list', todo.list_name);
 		this.field('listId', todo.list_id);
 	}
+
 	reset () {
+		this.editing = null;
 		this.state = 'Add';
+
 		['title', 'body', 'list', 'todoId'].forEach(el => {
 			if (this.field(el)) {
 				this.field(el, '');
@@ -71,9 +61,17 @@ class TodoForm {
 		});
 	}
 
-	// Mithril
-	view({ attrs }) {
-		let form = m('div', { id: 'todoForm' }, [
+	hide() {
+		this.reset();
+		super.hide();
+	}
+
+	header() {
+		return `${this.state} Todo`;
+	}
+
+	content() {
+		return m('div', { id: 'todoForm' }, [
 			// Inputs
 			m('div.columns', m('div.column.is-one-third', [
 				m('div.field', [
@@ -91,26 +89,23 @@ class TodoForm {
 				m('label.label', 'List'),
 				m('div.field', [
 					m('div.control', [
-						m('input.input', { id: 'list', type: 'text', tabindex: 1 }),
+						m('div.dropdown.is-active', { style: 'z-index: 999' }, [
+							m('div.dropdown-menu', [
+								m('div.dropdown-content', { style: 'background-color: rgba(255, 0, 0, 0)' }, [
+									m('input.input', { id: 'list' })
+								])
+							])
+						]),
+						m('br'),
+						m('br'),
+						m('br'),
+						// m('input.input', { id: 'list', type: 'text', tabindex: 1 }),
 						m('input.is-hidden', { id: 'listId' }),
 					]),
 				]),
 			])),
 
 			m('input.input.is-hidden', { id: 'todoId' })
-		]);
-
-		let submit = m('div.field', [
-			m('button.button.is-primary', { onclick: () => attrs.onclick() }, 'Submit'),
-			m('button.button.is-text', { onclick: () => this.modal.toggle() }, 'Cancel'),
-		]);
-
-		return m('div', [
-			m(this.modal, {
-				header: `${this.state} Todo`,
-				content: form,
-				footer: submit
-			}),
 		]);
 	}
 
@@ -123,16 +118,29 @@ class TodoForm {
 			selector: '#list',
 			placeHolder: 'List',
 			highlight: true,
+			searchEngine: 'strict',
 			resultsList: {
 				render: true,
-				container: source => source.setAttribute('id', 'list'),
+				container: (source) => {
+					source.setAttribute('id', 'list');
+					// source.setAttribute('class', 'dropdown');
+				},
 				destination: document.querySelector('#list'),
+				position: 'afterend',
+				element: 'div',
+			},
+			resultItem: {
+				content: (data, source) => {
+					source.setAttribute('class', 'dropdown-item is-primary');
+					source.innerHTML = data.match;
+				},
+				element: 'a',
 			},
 			onSelection: feedback => {
 				this.field('list', feedback.selection.value.name);
 				this.field('listId', feedback.selection.value.id);
 			},
-			noResults: () => { console.log("** NO RESULTS **") },
+			noResults: () => { console.log("** NO AUTOCOMPLETE RESULTS **") },
 			query: {
 				manipulate: (query) => {
 					return query;
