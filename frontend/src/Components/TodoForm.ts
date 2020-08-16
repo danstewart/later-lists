@@ -59,6 +59,9 @@ class TodoForm extends Modal {
 				this.field(el, '');
 			}
 		});
+
+		// Empty the autocomplete options
+		document.querySelector('div#list').innerHTML = '';
 	}
 
 	header() {
@@ -84,23 +87,13 @@ class TodoForm extends Modal {
 				m('label.label', 'List'),
 				m('div.field', [
 					m('div.control', [
-						m('div.dropdown.is-active', { style: 'z-index: 999' }, [
-							m('div.dropdown-menu', [
-								m('div.dropdown-content', { style: 'background-color: rgba(255, 0, 0, 0)' }, [
-									m('input.input', { id: 'list' })
-								])
-							])
-						]),
-						m('br'),
-						m('br'),
-						m('br'),
-						// m('input.input', { id: 'list', type: 'text', tabindex: 1 }),
-						m('input.is-hidden', { id: 'listId' }),
+						m('input#list.input'),
+						m('input#listId.is-hidden'),
 					]),
 				]),
 			])),
 
-			m('input.input.is-hidden', { id: 'todoId' })
+			m('input#todoId.input.is-hidden')
 		]);
 	}
 
@@ -111,14 +104,14 @@ class TodoForm extends Modal {
 				key: ['name']
 			},
 			selector: '#list',
-			placeHolder: 'List',
+			// placeHolder: 'List',
 			highlight: true,
 			searchEngine: 'strict',
 			resultsList: {
 				render: true,
 				container: (source) => {
 					source.setAttribute('id', 'list');
-					// source.setAttribute('class', 'dropdown');
+					source.setAttribute('class', 'dropdown-content dropdown-hack');
 				},
 				destination: document.querySelector('#list'),
 				position: 'afterend',

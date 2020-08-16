@@ -24,7 +24,6 @@ class Todos {
 			}
 
 			this.initialized = true;
-			// setTimeout(() => { this.initialized = true; m.redraw(); }, 2000);
 		} catch {
 			// TODO: Show error
 			console.error("Loading lists failed");
@@ -62,8 +61,7 @@ class Todos {
 			listMap.get(listId).push(todo);
 		}
 
-		this.todoForm.reset();
-		this.todoForm.hide();
+		this.toggleForm();
 	}
 
 	renderList() {

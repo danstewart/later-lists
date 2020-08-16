@@ -80,3 +80,19 @@ header {
 .modal-card-foot {
 	background-color: $wheat !important;
 }
+
+.modal-card {
+	overflow: visible;
+	.modal-card-body {
+		overflow: visible;
+	}
+}
+
+// Hack for the autocomplete dropdown items
+// Hides the parent dropdown-content div
+.dropdown-hack {
+	border-radius: 0px;
+	box-shadow: none;
+	padding-top: 0px;
+	padding-bottom: 0px;
+}
