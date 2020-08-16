@@ -26,6 +26,11 @@ class TodoForm extends Modal {
 		});
 	}
 
+	toggle() {
+		super.toggle();
+		if (!this.visible) this.reset();
+	}
+
 	// Input element accessor
 	field(id: string, set?: string): string {
 		let el = document.querySelector(`#${id}`) as HTMLInputElement;

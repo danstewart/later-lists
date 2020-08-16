@@ -1,18 +1,14 @@
 // Base modal component
 // Inherit from this and override header, content and footer to use
-
-// For weird JS reasons the state has to be managed by the caller and passed in
-// The attrs should comply with the ModalAttrs interface
 import m, { Vnode } from 'mithril';
 
-
-interface ModalAttrs {
-	visible: boolean,
-	save: Function,
-	toggle: Function,
-}
-
 class Modal {
+	visible: boolean = false;
+
+	toggle() {
+		this.visible = !this.visible;
+	}
+
 	header() {
 		return 'Default Modal';
 	}
@@ -24,17 +20,17 @@ class Modal {
 	footer(attrs) {
 		return m('div.field', [
 			m('button.button.is-primary', { onclick: () => attrs.save() }, 'Submit'),
-			m('button.button.is-text', { onclick: () => attrs.toggle() }, 'Cancel'),
+			m('button.button.is-text', { onclick: () => this.toggle() }, 'Cancel'),
 		]);
 	}
 
-	view({ attrs }: { attrs: ModalAttrs }): Vnode {
-		return m('div.modal', { class: attrs.visible ? 'is-active' : '' }, [
+	view({ attrs }): Vnode {
+		return m('div.modal', { class: this.visible ? 'is-active' : '' }, [
 			m('div.modal-background', []),
 			m('div.modal-card', [
 				m('header.modal-card-head', [
 					m('p.modal-card-title', this.header()),
-					m('button.delete', { onclick: () => attrs.toggle() }),
+					m('button.delete', { onclick: () => this.toggle() }),
 				]),
 				m('section.modal-card-body', [
 					this.content(attrs),
