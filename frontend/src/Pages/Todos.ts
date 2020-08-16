@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { TodoSidebar } from '/Components/Sidebars';
-import { TodoForm } from '/Components/TodoForm';
+import { TodoForm } from '../Components/Modals/TodoForm';
 import { TodoListBuilder } from '../Components/TodoListBuilder';
 import { TodoItem } from '/Models/TodoItem';
 import { TodoList } from '/Models/TodoList';

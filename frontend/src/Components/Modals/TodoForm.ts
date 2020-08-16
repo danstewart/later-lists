@@ -1,6 +1,6 @@
 import m, { Vnode } from 'mithril';
-import { TodoList } from '../Models/TodoList';
-import { Modal } from './Modal';
+import { TodoList } from '../../Models/TodoList';
+import { Modal } from '../Modal';
 import { TodoItem } from '/Models/TodoItem';
 import { Store } from '/store';
 import autoComplete from '@tarekraafat/autocomplete.js/dist/js/autoComplete.min.js';
