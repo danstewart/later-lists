@@ -61,11 +61,6 @@ class TodoForm extends Modal {
 		});
 	}
 
-	hide() {
-		this.reset();
-		super.hide();
-	}
-
 	header() {
 		return `${this.state} Todo`;
 	}
