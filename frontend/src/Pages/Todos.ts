@@ -50,6 +50,7 @@ class Todos {
 		} else {
 			let todo = new TodoItem({ title: title, body: body, list_name: list, list_id: listId });
 			listMap.get(listId).push(todo);
+			todo.save();
 		}
 
 		todoForm.state.toggle();
@@ -72,7 +73,10 @@ class Todos {
 		return m('div.container', [
 			Array.from(listMap.values()).map(list => {
 				if (list.todos.size > 0) {
-					return m(new TodoListBuilder(list), { edit: (todo) => editTodo(todo) });
+					return m(TodoListBuilder, {
+						todoList: list,
+						edit: (todo) => editTodo(todo),
+					});
 				}
 			}),
 			m('br'),

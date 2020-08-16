@@ -7,8 +7,8 @@ import { TodoList } from '/Models/TodoList';
 class TodoListBuilder {
 	private list: TodoList;
 
-	constructor(todoList: TodoList) {
-		this.list = todoList;
+	constructor({ attrs }) {
+		this.list = attrs.todoList;
 	}
 
 	view({ attrs }): Vnode {
@@ -17,7 +17,7 @@ class TodoListBuilder {
 		// 1.25rem to match box padding:
 		// https://github.com/jgthms/bulma/blob/1083f017a06b44d6f1e315de2b384798e69aeb35/docs/_sass/callout.sass#L5
 		return m('div', { style: 'margin-bottom: 1.25rem' }, [
-			this.list.all().map(todo => m(new TodoItemBuilder(todo), attrs))
+			this.list.all().map(todo => m(TodoItemBuilder, { ...attrs, todo: todo }))
 		]);
 	}
 }

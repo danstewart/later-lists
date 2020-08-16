@@ -6,8 +6,8 @@ import { Settings } from '/settings';
 class TodoItemBuilder {
 	todo: TodoItem;
 
-	constructor(todo: TodoItem) {
-		this.todo = todo;
+	constructor({ attrs }) {
+		this.todo = attrs.todo;
 	}
 
 	title() {
