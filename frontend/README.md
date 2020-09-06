@@ -5,8 +5,8 @@
 ├── Components/
 │   └── Dumb mithril renderers - most take a model in the constructor
 |
-├── DAO/
-│   └── Data Access Objects for each model
+├── Common/
+│   └── Shared logic
 |
 ├── index.html
 |   └── Default page

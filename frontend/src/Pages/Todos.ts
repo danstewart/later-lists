@@ -4,7 +4,6 @@ import { TodoForm } from '../Components/Modals/TodoForm';
 import { TodoListBuilder } from '../Components/TodoListBuilder';
 import { TodoItem } from '/Models/TodoItem';
 import { TodoList } from '/Models/TodoList';
-import { TodoListAPI } from '/DAO/TodoList';
 
 let listMap: Map<string, TodoList> = new Map<string, TodoList>();
 
@@ -14,18 +13,24 @@ class Todos {
 
 	async oninit() {
 		try {
-			let lists = await new TodoListAPI().fetchAll();
+			let lists = await new TodoList().loadAll();
 
 			for (let list of lists) {
-				let todoList = new TodoList(list.name, list.id);
-				await todoList.init();
-				listMap.set(list.id, todoList);
+				const todos = await new TodoItem().loadAll({ list_id: list.id });
+
+				if (todos.length > 0) {
+					for (let todo of todos) {
+						list.todos.set(todo.id, todo);
+					}
+				}
+				
+				listMap.set(list.id, list);
 			}
 
 			this.initialized = true;
-		} catch {
+		} catch(e) {
 			// TODO: Show error
-			console.error("Loading lists failed");
+			console.error("Loading lists failed: %o", e);
 		} finally {
 			m.redraw();
 			m.mount(document.querySelector('#sidebar'), new TodoSidebar());
@@ -48,7 +53,8 @@ class Todos {
 			todoForm.state.editing.update({ title: title, body: body, list_name: list, list_id: listId });
 			todoForm.state.editing.save();
 		} else {
-			let todo = new TodoItem({ title: title, body: body, list_name: list, list_id: listId });
+			let todo = new TodoItem();
+			todo.create({ title: title, body: body, list_name: list, list_id: listId });
 			listMap.get(listId).push(todo);
 			todo.save();
 		}

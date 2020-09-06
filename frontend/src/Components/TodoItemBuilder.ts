@@ -56,7 +56,7 @@ class TodoItemBuilder {
 					this.title(),
 				]),
 				m('div.level-right', [
-					m('p.heading', this.todo.created.local().format(Settings.DateFormat))
+					m('p.heading', this.todo.created_at.local().format(Settings.DateFormat))
 				]),
 			]),
 			this.details({ attrs }),

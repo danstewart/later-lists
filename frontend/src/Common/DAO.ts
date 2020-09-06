@@ -11,7 +11,7 @@ abstract class DAO<T extends hasId> {
 	abstract async saveAll(items: Array<T>, opts?: Object): Promise<void>;
 
 	// Retrieve
-	abstract async fetch(id: number, opts?: Object): Promise<T> | null;
+	abstract async fetchOne(id: string, opts?: Object): Promise<T> | null;
 	abstract async fetchAll(opts?: Object): Promise<Array<T>>;
 }
 
@@ -26,7 +26,7 @@ class LocalStorage<T extends hasId> extends DAO<T> {
 		localStorage.setItem('todos', JSON.stringify(items));
 	}
 
-	async fetch(id: number) {
+	async fetchOne(id: string) {
 		const stored = this.load();
 		if (stored && stored[id]) return new Promise<T>(stored[id]);
 		console.warn(`Failed to load todo ${id} from LocalStorage`);
@@ -49,12 +49,17 @@ class LocalStorage<T extends hasId> extends DAO<T> {
 	}
 }
 
-abstract class API<T extends hasId> extends DAO<T> {
-	abstract endpoint: string;
+class API<T extends hasId> extends DAO<T> {
+	endpoint: string;
 
-	async fetch(id: number, opts = {}) {
+	constructor(opts) {
+		super();
+		this.endpoint = opts.endpoint;
+	}
+
+	async fetchOne(id: string, opts = {}) {
 		let res = await fetch(`${this.endpoint}/${id}`);
-		let todo = JSON.parse(await res.json());
+		let todo = await res.json();
 		return new Promise<T>((resolve) => resolve(todo));
 	}
 
@@ -97,9 +102,17 @@ abstract class API<T extends hasId> extends DAO<T> {
 	}
 }
 
+// TODO: Return DAO based on settings
+function getDefault<T>(opts): DAO<T> {
+	return new API<T>(opts);
+}
+
+
 export {
+	getDefault,
 	DAO,
 	API,
 	LocalStorage,
 	hasId,
 }
+

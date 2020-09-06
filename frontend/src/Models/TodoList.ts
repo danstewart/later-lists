@@ -2,7 +2,7 @@
 
 import m from 'mithril';
 import { ITodo, TodoItem } from '/Models/TodoItem';
-import { DAO } from '../DAO/Base';
+import * as DAO from '/Common/DAO';
 import { Store } from '/store';
 import { v4 as uuidv4 } from 'uuid';
 import { Settings } from '/settings';
@@ -20,23 +20,56 @@ class TodoList implements ITodoList {
 	name: string;
 	todos: Map<string, TodoItem>;
 
-	constructor(name: string, id: string = uuidv4()) {
-		this.id    = id;
-		this.name  = name;
-		this.todos = new Map<string, TodoItem>();
+	dao: DAO.DAO<TodoList>;
+	initialized: boolean = false;
+
+	constructor() {
+		this.dao = DAO.getDefault({ endpoint: 'http://127.0.0.1:3030/api/lists' })
+		// this.id    = id;
+		// this.name  = name;
+		// this.todos = new Map<string, TodoItem>();
 
 		if (!store['lists']) store['lists'] = new Map<string, TodoList>()
-		store['lists'].set(this.id, this);
-		store.publish('lists');
 
-		// Whenever a todo changes store the lists and save everything
-		store.subscribe('todos', () => {
-			// let lists = new Set<string>();
-			// Array.from(this.todos.values()).filter(t => !t.archived).forEach(t => lists.add(t.list_name));
-			// store['lists'] = lists;
-			store.publish('lists');
-			m.redraw();
-		});
+		// // Whenever a todo changes store the lists and save everything
+		// store.subscribe('todos', () => {
+		// 	// let lists = new Set<string>();
+		// 	// Array.from(this.todos.values()).filter(t => !t.archived).forEach(t => lists.add(t.list_name));
+		// 	// store['lists'] = lists;
+		// 	store.publish('lists');
+		// 	m.redraw();
+		// });
+	}
+
+	// Constructor to create a new TodoList
+	// or load a prefetched list into an object
+	create(name: string, id: string = uuidv4(), todos: Map<string, TodoItem>): TodoList {
+		this.id    = id;
+		this.name  = name;
+		this.todos = todos || new Map<string, TodoItem>();
+
+		this.initialized = true;
+		return this;
+	}
+
+	async load(id: string): Promise<TodoList> {
+		const list = await this.dao.fetchOne(id);
+
+		this.id = list.id;
+		this.name = list.name;
+		this.todos = list.todos || new Map<string, TodoItem>();
+
+		this.initialized = true;
+		return Promise.resolve(this);
+	}
+
+	// This feels wrong but I don't know why
+	// Guess I'll find out if/when it bites me
+	async loadAll() {
+		let allLists = await this.dao.fetchAll();
+		allLists = await Promise.all(allLists.map(l => new TodoList().load(l.id)));
+
+		return Promise.resolve(allLists);
 	}
 
 	selected() {
@@ -62,14 +95,12 @@ class TodoList implements ITodoList {
 		return this;
 	}
 
-	// Loads a list from a DAO
-	async load(dao: DAO<ITodo> = Settings.DAO.Todo): Promise<Array<ITodo>> {
-		return dao.fetchAll({ list_id: this.id });
-	}
+	async save(): Promise<any> {
+		// Add this to the store
+		store['lists'].set(this.id, this);
+		store.publish('lists');
 
-	// Saves a list via the DAO
-	async save(dao: DAO<ITodo> = Settings.DAO.Todo): Promise<any> {
-		dao.saveAll(this.all());
+		this.dao.save(this);
 		return Promise.resolve();
 	}
 
@@ -80,17 +111,6 @@ class TodoList implements ITodoList {
 		}
 
 		return Array.from(this.todos.values());
-	}
-
-	async init() {
-		// Load todos
-		let stored = await this.load();
-
-		if (stored.length) {
-			stored.forEach(element => this.push(new TodoItem(element)));
-		}
-
-		return Promise.resolve();
 	}
 }
 
